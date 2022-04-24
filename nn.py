@@ -36,12 +36,14 @@ class Network(object):
         """Return the output of the network if ``a`` is input."""
         for b, w in zip(self.biases, self.weights):
             a = sigmoid(np.dot(w, a)+b)
-            print(a)
+            #print(a)
         return a
 
 if __name__ == '__main__':
     my_network = Network([4,3,6,1])
 
-    result = my_network.feedforward([0.3, 0.4, -0.2, -1])
+    result = my_network.feedforward([0.3, 0.4, -0.2, -1])[0]
 
-    print(result)
+    print(f"result={result}")
+
+    print(f"weights={my_network.weights}")

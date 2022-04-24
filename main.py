@@ -2,17 +2,17 @@ import logging
 import sys
 import time
 import numpy as np
-import tensorflow as tf
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+#import tensorflow as tf
+#tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 from population import Population
 
-POPULATION_SIZE = 20#2000
-GENERATIONS = 3
-KEEP_X_PERC_BEST = 40 #20
+POPULATION_SIZE = 2000#2000
+GENERATIONS = 100
+KEEP_X_PERC_BEST = 10 #20
 RANDOM_MEMBERS_PER_GENERATION = 0
 MUTATION_RATE = 2
-TOP_PARENTS_SELECTED = 5 #100
+TOP_PARENTS_SELECTED = 50 #100
 #CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_PER_GENERATION
 
 def main():

@@ -6,7 +6,7 @@ import time
 import logging
 #from multiprocessing.pool import ThreadPool
 
-random.seed(0)
+#random.seed(0)
 
 class Population:
     def __init__(self, size):
@@ -42,7 +42,9 @@ class Population:
 
         #model.get_layer(layerName).set_weights(...)
         #print(f"param dna: {dna}")
-        member.model.get_layer("dense1").set_weights(dna)
+        #member.model.get_layer("dense1").set_weights(dna)
+        member.model.weights = dna[0]
+        member.model.biases = dna[1]
 
         self.members.append(member)
         #print(f"Adding member id:{self.next_id}")
@@ -102,6 +104,7 @@ class Population:
             #Yes, father and mother could be the same
             #father_id = self.select_random_parent(parents_ids)
             #mother_id = self.select_random_parent(parents_ids)
+            
             father_id = self.select_proportional_by_fitness_parent(parents_ids)
             mother_id = self.select_proportional_by_fitness_parent(parents_ids)
             
@@ -117,11 +120,14 @@ class Population:
                     break
             #print(f"found origin - father:{father_idx}, mother:{mother_idx}")
 
-            father_dna = self.members[father_idx].model.get_layer("dense1").get_weights()
-            mother_dna = self.members[mother_idx].model.get_layer("dense1").get_weights()
+            #father_dna = self.members[father_idx].model.get_layer("dense1").get_weights()
+            #mother_dna = self.members[mother_idx].model.get_layer("dense1").get_weights()
 
-            father_weight = father_dna[0]
-            mother_weight = mother_dna[0]
+            #father_weight = father_dna[0]
+            #mother_weight = mother_dna[0]
+
+            father_weight = self.members[father_idx].model.weights
+            mother_weight = self.members[mother_idx].model.weights
 
             #print(f"father shape: {np.array(father_weight).shape}")
 
@@ -129,16 +135,18 @@ class Population:
             if randint(1,100) <= mutation_rate:
                 mutate = True
 
-            son_weight = mix_5050(father_weight, mother_weight, mutate)
+            son_weight = mix(father_weight, mother_weight, mutate)
 
-            father_bias = father_dna[1]
-            mother_bias = mother_dna[1]
+            #father_bias = father_dna[1]
+            #mother_bias = mother_dna[1]
+            father_biases = self.members[father_idx].model.biases
+            mother_biases = self.members[mother_idx].model.biases
 
             #print(f"fatherB shape: {np.array(father_bias).shape}")
 
             #TODO: maybe later we will need bias numbers
             #son_bias = mix_5050(father_bias, mother_bias)
-            son_bias = father_bias
+            son_biases = father_biases
             
             #print(f"father: {father_dna}")
             #print(f"mother: {mother_dna}")
@@ -146,9 +154,30 @@ class Population:
             #print(f"son_bias: {son_bias}")
 
             #print(f"son shape: {np.array(son_weight).shape}")
-            son_dna = [son_weight, son_bias]
+            son_dna = [son_weight, son_biases]
             
             self.add_member_from_dna(son_dna)
+
+
+def mix(A,B, mutate=False):
+    #print("mixing")
+    #print(f"a={A}")
+    #print(f"b={B}")
+    C = []
+    for i, WoB in enumerate(A):
+        new_WoB = []
+        for j, row in enumerate(WoB):
+            new_row = []
+            for k in range(len(row)):
+                if randint(1,2) == 1:
+                    new_value = A[i][j][k]
+                else:
+                    new_value = B[i][j][k]
+                new_row.append(new_value)
+            new_WoB.append(new_row)
+        C.append(np.array(new_WoB))
+    #print(f"c={C}")
+    return C
 
 def mix_5050(A, B, mutate):
     #print(f"A=")
