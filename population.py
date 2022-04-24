@@ -34,8 +34,12 @@ class Population:
 
     def add_member_from_dna(self, dna):
         member = Dna(self.next_id)
+        #print_model_details(member.model)
+
         #model.get_layer(layerName).set_weights(...)
+        #print(f"param dna: {dna}")
         member.model.get_layer("dense1").set_weights(dna)
+
         self.members.append(member)
         #print(f"Adding member id:{self.next_id}")
         self.next_id = self.next_id + 1
@@ -83,25 +87,30 @@ class Population:
             father_weight = father_dna[0]
             mother_weight = mother_dna[0]
 
+            #print(f"father shape: {np.array(father_weight).shape}")
+
             mutate = False
-            #if randint(1,100) <= mutation_rate:
-            #    mutate = True
+            if randint(1,100) <= mutation_rate:
+                mutate = True
 
             son_weight = mix_5050(father_weight, mother_weight, mutate)
 
             father_bias = father_dna[1]
             mother_bias = mother_dna[1]
 
+            #print(f"fatherB shape: {np.array(father_bias).shape}")
+
             #TODO: maybe later we will need bias numbers
             #son_bias = mix_5050(father_bias, mother_bias)
             son_bias = father_bias
             
-            print(f"father: {father_dna}")
-            print(f"mother: {mother_dna}")
-            print(f"son_weight: {son_weight}")
-            print(f"son_bias: {son_bias}")
+            #print(f"father: {father_dna}")
+            #print(f"mother: {mother_dna}")
+            #print(f"son_weight: {son_weight}")
+            #print(f"son_bias: {son_bias}")
 
-            son_dna = np.array([son_weight, son_bias], dtype=object)
+            #print(f"son shape: {np.array(son_weight).shape}")
+            son_dna = [son_weight, son_bias]
             
             self.add_member_from_dna(son_dna)
 
@@ -165,3 +174,11 @@ def mix_5050(A, B, mutate):
     #model.layers[i].set_weights(listOfNumpyArrays)    
     #model.get_layer(layerName).set_weights(...)
     #model.set_weights(listOfNumpyArrays)
+
+def print_model_details(model):
+    for layer in model.layers:
+        print(layer.name)
+        print("Weights")
+        print("Shape: ",layer.get_weights()[0].shape,'\n',layer.get_weights()[0])
+        print("Bias")
+        print("Shape: ",layer.get_weights()[1].shape,'\n',layer.get_weights()[1],'\n')

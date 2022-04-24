@@ -76,12 +76,12 @@ class SnakeGame:
         return -1
 
     def get_fruit_horizontal_distance(self):
-        print(f"fruit:{self.fruit_position}")
+        #print(f"fruit:{self.fruit_position}")
         #print(self.fruit_position[0])
-        print(f"snake:{self.get_snake_head_pos()}")
+        #print(f"snake:{self.get_snake_head_pos()}")
         #print(self.get_snake_head_pos()[0])
         normalized_x_distance = (self.fruit_position[0]-self.get_snake_head_pos()[0])/BOARD_SIZE
-        print(f"distance={normalized_x_distance}")
+        #print(f"distance={normalized_x_distance}")
         return normalized_x_distance
 
     def get_fruit_vertical_distance(self):
