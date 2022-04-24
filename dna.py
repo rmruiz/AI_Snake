@@ -1,9 +1,12 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
+
 import tensorflow as tf
 import numpy as np
 
 from snakegame import SnakeGame
 
-INPUT_SIZE = 7
+INPUT_SIZE = 6
 # Input[0,1,2,3] = wall/body north/south/east/west
 # Input4 = snake current direction
 # Input5 = angle to food
@@ -11,6 +14,7 @@ OUTPUT_SIZE = 4
 # Output[0,1,2,3] = next move is north/south/east/west
 HIDDEN_LAYERS = 1
 NEURONS_PER_LAYER = 6
+import warnings
 
 class Dna:
     #creates a random DNA
@@ -30,20 +34,14 @@ class Dna:
         return self.model.predict([input])
 
     def test_dna_to_update_fitness(self):
-        #setup game
         sg = SnakeGame()
-        sg.print_board()
-        
-
-        #while alive
+        #sg.print_board()
         while(sg.alive):
-        #for _ in range(10):
-        #  if sg.alive:
-            input = [sg.have_wall_on_north(), #0 No, 1 Yes
+            input = [sg.have_wall_on_north(), # No:-1, Yes:1
                     sg.have_wall_on_south(),
                     sg.have_wall_on_east(),
                     sg.have_wall_on_west(),
-                    sg.direction, #0N, 1E, 2S, 3W
+                    #sg.direction, #0N, 1E, 2S, 3W
                     sg.get_fruit_horizontal_distance(),
                     sg.get_fruit_vertical_distance()
                     ]
