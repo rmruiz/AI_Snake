@@ -6,6 +6,8 @@ import time
 import logging
 #from multiprocessing.pool import ThreadPool
 
+random.seed(0)
+
 class Population:
     def __init__(self, size):
         self.next_id = 0
@@ -22,10 +24,12 @@ class Population:
             logging.debug(f"Testing DNA #{member.id}")
             #threads.append(pool.apply_async(member.test_dna_to_update_fitness))
             member.test_dna_to_update_fitness()
+            print('.', end='', flush=True)
         #for t in threads:
         #    t.get()
         end = time.time()
         logging.debug(f"Time elapsed:{end - start}")
+        print('||', end='', flush=True)
 
     def add_random_member(self):
         self.members.append(Dna(self.next_id))
@@ -60,14 +64,46 @@ class Population:
         #print(f"the best: {best_members_ids}")
         return best_members_ids
 
+    def select_random_parent(parents_ids):
+        return parents_ids[randint(0,len(parents_ids)-1)]
+
+    def select_proportional_by_fitness_parent(self, parents_ids):
+        #print("######")
+        #print(f"parents_ids:{parents_ids}")
+        parents_dict = {}
+        total_fitness = 0
+        for member in self.members:
+            if member.id in parents_ids:
+                parents_dict[member.id] = member.fitness
+                total_fitness = total_fitness + member.fitness
+
+        #print(f"parents_dict:{parents_dict}")
+        #print(f"total_fitness:{total_fitness}")
+
+        random_fitness_wheel = randint(1,total_fitness-1)
+        #print(f"random_fitness_wheel:{random_fitness_wheel}")
+        delete_me = 0
+        for selected_parent_id in parents_dict:
+            random_fitness_wheel = random_fitness_wheel - parents_dict[selected_parent_id]
+            #print(f"random_fitness_wheel:{random_fitness_wheel}")
+            if random_fitness_wheel <= 0:
+                #print(f"selected_parent_id:{selected_parent_id}")
+                return selected_parent_id
+            delete_me = selected_parent_id
+        #TODO: delete this:
+        print("We shouldn't be here")
+        return delete_me
+
     def crossover_and_mutate(self, parents_ids, quantity, mutation_rate):
         if len(parents_ids) == 0:
             raise "generaition quiality too poor"
         while len(self.members) <= quantity:
             #print(f"starting crossover")
             #Yes, father and mother could be the same
-            father_id = parents_ids[randint(0,len(parents_ids)-1)]
-            mother_id = parents_ids[randint(0,len(parents_ids)-1)]
+            #father_id = self.select_random_parent(parents_ids)
+            #mother_id = self.select_random_parent(parents_ids)
+            father_id = self.select_proportional_by_fitness_parent(parents_ids)
+            mother_id = self.select_proportional_by_fitness_parent(parents_ids)
             
             #print(f"found a match! father:{father_id}, mother:{mother_id}")
 

@@ -1,5 +1,7 @@
-from random import randint
+from random import randint, random
 from enum import Enum
+
+random.seed(0)
 
 BOARD_SIZE = 5
 MAX_STEPS_WITHOUT_FOOD = 2 * BOARD_SIZE * BOARD_SIZE

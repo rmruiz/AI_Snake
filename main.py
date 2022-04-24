@@ -7,12 +7,12 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 from population import Population
 
-POPULATION_SIZE = 200
-GENERATIONS = 30
-KEEP_X_PERC_BEST = 5
+POPULATION_SIZE = 20#2000
+GENERATIONS = 3
+KEEP_X_PERC_BEST = 40 #20
 RANDOM_MEMBERS_PER_GENERATION = 0
 MUTATION_RATE = 2
-TOP_PARENTS_SELECTED = 10
+TOP_PARENTS_SELECTED = 5 #100
 #CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_PER_GENERATION
 
 def main():
@@ -29,6 +29,7 @@ def main():
 
     population = Population(size=POPULATION_SIZE)  
     for gen in range(GENERATIONS):
+        print(f"{gen}", end='', flush=True)
         
         population.update_fitness()
         

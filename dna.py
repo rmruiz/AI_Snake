@@ -24,6 +24,7 @@ class Dna:
         self.layerout = tf.keras.layers.Dense(units=OUTPUT_SIZE, name='denseout')
         self.model = tf.keras.Sequential([self.layer1, self.layerout])
         self.fitness = 0
+        print(':', end='', flush=True)
 
     def get_weights(self):
         return self.layer1.get_weights()
