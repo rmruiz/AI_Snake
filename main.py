@@ -9,10 +9,11 @@ from population import Population
 
 POPULATION_SIZE = 2000#2000
 GENERATIONS = 100
-KEEP_X_PERC_BEST = 10 #20
-RANDOM_MEMBERS_PER_GENERATION = 0
-MUTATION_RATE = 2
-TOP_PARENTS_SELECTED = 50 #100
+ITERATIONS_PER_GENERATION = 5
+KEEP_X_PERC_BEST = 20 #20
+RANDOM_MEMBERS_PER_GENERATION = 30
+MUTATION_RATE = 3
+TOP_PARENTS_SELECTED = 100 #100
 #CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_PER_GENERATION
 
 def main():
@@ -31,7 +32,7 @@ def main():
     for gen in range(GENERATIONS):
         print(f"{gen}", end='', flush=True)
         
-        population.update_fitness()
+        population.update_fitness(iterations=ITERATIONS_PER_GENERATION)
         
         results = sorted([member.fitness for member in population.members], reverse=False)
         logging.info(results)
@@ -52,10 +53,14 @@ def main():
         population.crossover_and_mutate(parents_ids, POPULATION_SIZE-RANDOM_MEMBERS_PER_GENERATION-1, MUTATION_RATE)
         
         population.fill_with_random_members(RANDOM_MEMBERS_PER_GENERATION)
+
+        population.save_best_to_file()
         
     logging.info(stats)
     for gen in stats['results']: 
         logging.info(f"{gen} {stats['results'][gen]['min']} {stats['results'][gen]['max']} {stats['results'][gen]['avg']} {stats['results'][gen]['stdev']}")
+
+    
 
 def config_new_logger():
     logger = logging.getLogger()

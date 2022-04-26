@@ -4,6 +4,9 @@ from dna import Dna
 import numpy as np
 import time
 import logging
+import json
+import jsonpickle
+from json import JSONEncoder
 #from multiprocessing.pool import ThreadPool
 
 #random.seed(0)
@@ -15,7 +18,26 @@ class Population:
         for _ in range(size):
             self.add_random_member()
 
-    def update_fitness(self):
+    def save_best_to_file(self):
+        #filename = time.strftime("winner-%Y%m%d-%H%M%S.json")
+        filename = time.strftime("winner-%Y%m%d.json")
+        best = -1
+        best_fitness = 0
+        for idx, member in enumerate(self.members):
+            if member.fitness > best_fitness:
+                best = idx
+
+        data = {}
+        data['sizes'] = self.members[best].model.sizes
+        data['biases'] = self.members[best].model.biases
+        data['weights'] = self.members[best].model.weights
+
+        json_data = jsonpickle.encode(data)
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)
+
+    def update_fitness(self, iterations=1):
         #pool = ThreadPool(processes=1)
         #threads = []
         
@@ -23,7 +45,7 @@ class Population:
         for member in self.members:
             logging.debug(f"Testing DNA #{member.id}")
             #threads.append(pool.apply_async(member.test_dna_to_update_fitness))
-            member.test_dna_to_update_fitness()
+            member.iterate_to_update_fitness(iterations)
             print('.', end='', flush=True)
         #for t in threads:
         #    t.get()
@@ -160,9 +182,13 @@ class Population:
 
 
 def mix(A,B, mutate=False):
-    #print("mixing")
-    #print(f"a={A}")
-    #print(f"b={B}")
+    """
+    mixes lists of np arrays A and B (of weights or biases)
+    selecting items for each positions randomly
+    creating list C with same quantity and array structures
+
+    if mutate then select a single data of a single array to randomize
+    """
     C = []
     for i, WoB in enumerate(A):
         new_WoB = []
@@ -176,69 +202,16 @@ def mix(A,B, mutate=False):
                 new_row.append(new_value)
             new_WoB.append(new_row)
         C.append(np.array(new_WoB))
-    #print(f"c={C}")
-    return C
 
-def mix_5050(A, B, mutate):
-    #print(f"A=")
-    #for layer in A:
-    #    print(layer)
-    #print(f"B=")
-    #for layer in B:
-    #    print(layer)
     if mutate:
-        if randint(1,2) == 1:
-            #print(A)
-            layers = len(A)
-            #print(f"layers={layers}")
-            mutant_layer = randint(1,layers)-1
-            #print(f"mutant_layer={mutant_layer}")
-            cells = len(A[mutant_layer])
-            #print(f"cells={cells}")
-            mutant_cell = randint(1,cells)-1
-            #print(f"mutant_cell={mutant_cell}")
-            #print(f"Mutant father {A[mutant_layer][mutant_cell]}")
-            A[mutant_layer][mutant_cell] = (random()-0.5)*2
-            #print(f"Mutant father {A[mutant_layer][mutant_cell]}")
-        else:
-            #print(B)
-            layers = len(B)
-            mutant_layer = randint(1,layers)-1
-            cells = len(B[mutant_layer])
-            mutant_cell = randint(1,cells)-1
-            #print(f"Mutant mother {B[mutant_layer][mutant_cell]}")
-            B[mutant_layer][mutant_cell] = (random()-0.5)*2
-            #print(f"Mutant mother {B[mutant_layer][mutant_cell]}")
+        i = randint(0,len(C)-1)
+        WoB = C[i]
+        j = randint(0,len(WoB)-1)
+        row = WoB[j]
+        k = randint(0,len(row)-1)
+        C[i][j][k] = (random()-0.5)*2
 
-    first = True
-    result = None
-    for i, layer in enumerate(A):
-        mix_layer = []
-        for j, cell in enumerate(layer):
-            if randint(0,100) > 50: #50/50 method
-                mix_layer.append(A[i][j])
-            else:
-                mix_layer.append(B[i][j])
-        if first:
-            result = np.array([mix_layer])
-            first = False
-        else:
-            result = np.append(result, [mix_layer], axis=0)
-
-    #print(f"R=")
-    #for layer in result:
-    #    print(layer)
-
-    return result
-
-            
-
-    #model.get_layer(<<layer_name>>).get_weights()[0] # weights
-    #model.get_layer(<<layer_name>>).get_weights()[1] # bias
-
-    #model.layers[i].set_weights(listOfNumpyArrays)    
-    #model.get_layer(layerName).set_weights(...)
-    #model.set_weights(listOfNumpyArrays)
+    return C
 
 def print_model_details(model):
     for layer in model.layers:
@@ -247,3 +220,5 @@ def print_model_details(model):
         print("Shape: ",layer.get_weights()[0].shape,'\n',layer.get_weights()[0])
         print("Bias")
         print("Shape: ",layer.get_weights()[1].shape,'\n',layer.get_weights()[1],'\n')
+
+

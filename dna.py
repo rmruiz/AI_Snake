@@ -8,12 +8,8 @@ from snakegame import SnakeGame
 
 from nn import Network
 
-INPUT_SIZE = 6
-# Input[0,1,2,3] = wall/body north/south/east/west
-# Input4 = snake current direction
-# Input5 = angle to food
+INPUT_SIZE = 8
 OUTPUT_SIZE = 4
-# Output[0,1,2,3] = next move is north/south/east/west
 HIDDEN_LAYERS = 1
 NEURONS_PER_LAYER = 6
 import warnings
@@ -39,30 +35,33 @@ class Dna:
         #return self.model.predict([input])
         return self.model.feedforward(input)[0]
 
-    def test_dna_to_update_fitness(self):
+    def iterate_to_update_fitness(self, iterations=1):
+        results = []
+        for i in range(iterations):
+            result = self.test_dna_to_update_fitness()
+            results.append(result)
+        self.fitness = int(sum(results)/len(results))
+
+    def test_dna_to_update_fitness(self, print_test=False):
+
         sg = SnakeGame()
         #sg.print_board()
         while(sg.alive):
-            input = [sg.have_wall_on_north(), # No:-1, Yes:1
-                    sg.have_wall_on_south(),
-                    sg.have_wall_on_east(),
-                    sg.have_wall_on_west(),
-                    #sg.direction, #0N, 1E, 2S, 3W
-                    sg.get_fruit_horizontal_distance(),
-                    sg.get_fruit_vertical_distance()
-                    ]
-            #print(input)
-
+            input = sg.get_current_input()
             #check next move
             next_move = self.next_move_from_input(input)
             #print(f"{next_move=}")
-            sg.move_snake(next_move)    
-            #add points/kill
-            #change position
+            sg.move_snake(next_move, print_test=print_test)
+            if print_test:
+                print(f"fitness:{sg.get_fitness_score()}")    
         #calculate new fitness
         self.fitness = sg.get_fitness_score()
+        if print_test:
+            print("THE_END")
+            print(f"apple:{sg.fruit_position}")
+            print(f"snake:{sg.snake}")
         
-        return
+        return self.fitness
 
     def next_move_from_input(self, input):
         #prediction = self.model.predict([input])

@@ -3,8 +3,8 @@ from enum import Enum
 
 #random.seed(0)
 
-BOARD_SIZE = 5
-MAX_STEPS_WITHOUT_FOOD = 2 * BOARD_SIZE * BOARD_SIZE
+BOARD_SIZE = 10
+MAX_STEPS_WITHOUT_FOOD = 5 * BOARD_SIZE
 
 class BoardCell(Enum):
     EMPTY = 0
@@ -52,6 +52,44 @@ class SnakeGame:
     #    board = self.build_board()
     #    print(panda.DataFrame(board)) 
 
+    def have_snake_on_north(self):
+        x, y = self.get_snake_head_pos()
+        if [x, y-1] in self.snake:
+            return 1
+        return -1
+    def have_snake_on_south(self):
+        x, y = self.get_snake_head_pos()
+        if [x, y+1] in self.snake:
+            return 1
+        return -1 
+
+    def have_snake_on_west(self):
+        x, y = self.get_snake_head_pos()
+        if [x-1, y] in self.snake:
+            return 1
+        return -1 
+
+    def have_snake_on_east(self):
+        x, y = self.get_snake_head_pos()
+        if [x+1, y] in self.snake:
+            return 1
+        return -1
+
+    #1 touching north, -1 touching south, 0 in the middle
+    def distance_to_north_south_wall(self):
+        x=self.get_snake_head_pos()[0]
+        m=(-2)/(BOARD_SIZE-1)
+        b=1-m
+        y=m*x+b
+        return y
+
+    def distance_to_west_east_wall(self):
+        x=self.get_snake_head_pos()[1]
+        m=(-2)/(BOARD_SIZE-1)
+        b=1-m
+        y=m*x+b
+        return y
+
     def have_wall_on_north(self):
         x, y = self.get_snake_head_pos()
         #if self.board[y-1][x] == BoardCell.WALL.value:
@@ -82,17 +120,19 @@ class SnakeGame:
         #print(self.fruit_position[0])
         #print(f"snake:{self.get_snake_head_pos()}")
         #print(self.get_snake_head_pos()[0])
-        normalized_x_distance = (self.fruit_position[0]-self.get_snake_head_pos()[0])/BOARD_SIZE
+        normalized_x_distance = (self.fruit_position[0]-self.get_snake_head_pos()[0])/(BOARD_SIZE-1)
         #print(f"distance={normalized_x_distance}")
         return normalized_x_distance
 
     def get_fruit_vertical_distance(self):
-        return (self.fruit_position[1]-self.get_snake_head_pos()[1])/BOARD_SIZE
+        return (self.fruit_position[1]-self.get_snake_head_pos()[1])/(BOARD_SIZE-1)
 
-    def move_snake(self, direction):
+    def move_snake(self, direction, print_test=False):
         #print(f"starting move in {direction=} [steps={self.steps_util_death}]")
         #print(" the snake:")
         #print(self.snake)
+        if print_test:
+            print(f"D:{direction}")
         x = 0
         y = 0
         if direction == "north":
@@ -111,18 +151,23 @@ class SnakeGame:
             self.apples_eaten = self.apples_eaten + 1
             self.steps_util_death = MAX_STEPS_WITHOUT_FOOD
             got_apple = True
-            #print(" apple eaten!")
+            if print_test:
+                print(" apple eaten!")
 
         #check for wall or body part
         #if self.board[new_head_position[1]][new_head_position[0]] == BoardCell.WALL.value:
         if new_head_position[0] == 0 or new_head_position[1] == 0 or new_head_position[0] == BOARD_SIZE+1 or new_head_position[1] == BOARD_SIZE+1:
             self.alive = False
-            #print(" me is dead :( - hit a wall")
+            if print_test:
+                print(" me is dead :( - hit a wall")
             return
 
         if new_head_position in self.snake:
             self.alive = False
-            #print(" me is dead :( - hit myself")
+            if print_test:
+                print(" me is dead :( - hit myself")
+                #print(new_head_position)
+                #print(self.snake)                
             return
 
         #move snake
@@ -140,12 +185,28 @@ class SnakeGame:
 
         self.steps_util_death = self.steps_util_death - 1
         if self.steps_util_death == 0:
-            #print(" me is dead :( - no food found!")
+            if print_test:
+                print(" me is dead :( - no food found!")
             self.alive = False
         
         self.total_steps = self.total_steps + 1
-        #print(f"total steps: {self.total_steps}")
+        if print_test:
+            print(f"total steps: {self.total_steps}, total apples: {self.apples_eaten}")
         return
     
     def get_fitness_score(self):
-        return self.total_steps + self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
+        return self.total_steps + self.apples_eaten*self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
+
+    def get_current_input(self):
+        return [    #self.have_wall_on_north(), # No:-1, Yes:1
+                    #self.have_wall_on_south(),
+                    #self.have_wall_on_east(),
+                    #self.have_wall_on_west(),
+                    self.distance_to_north_south_wall(),
+                    self.distance_to_west_east_wall(),
+                    self.have_snake_on_north(),
+                    self.have_snake_on_south(),
+                    self.have_snake_on_east(),
+                    self.have_snake_on_west(),
+                    self.get_fruit_horizontal_distance(),
+                    self.get_fruit_vertical_distance()  ]
