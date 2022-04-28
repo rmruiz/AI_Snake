@@ -5,6 +5,9 @@ import numpy as np
 
 #https://gist.github.com/roycoding/7bfcd821ae5be40804979973be149953
 
+def relu(z):
+    return np.maximum(0,z)
+
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
@@ -34,16 +37,36 @@ class Network(object):
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
+        
         for b, w in zip(self.biases, self.weights):
+            #print(f"size w: {np.array(w).shape}")
+            #print(f"W:{w}")
+            
+            #print(f"lenght a: {np.array(a).shape}")
+            #print(f"A:{a}")
+        
+            #print(f"lenght b: {np.array(b).shape}")
+            #print(f"B:{b}")
+            #print("")
+
+            #print(f"lenght wa: {np.array(np.dot(w, a)).shape}")
+            #print(f"lenght wa+b: {np.array(np.dot(w, a)+b).shape}")
+
             a = sigmoid(np.dot(w, a)+b)
             #print(a)
+        #print(f"lenght a: {np.array(a).shape}")
         return a
 
 if __name__ == '__main__':
-    my_network = Network([4,3,6,1])
+    #my_network = Network([4,3,6,1])
+    my_network = Network([4,6,3])
 
-    result = my_network.feedforward([0.3, 0.4, -0.2, -1])[0]
+    a = np.random.random(size=(4,1))
 
-    print(f"result={result}")
+    result = my_network.feedforward(a)
 
-    print(f"weights={my_network.weights}")
+    #print(f"result={result}")
+
+    #print(f"weights={my_network.weights}")
+
+    #print(f"biases={my_network.biases}")

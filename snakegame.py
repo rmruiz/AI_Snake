@@ -3,7 +3,7 @@ from enum import Enum
 
 #random.seed(0)
 
-BOARD_SIZE = 10
+BOARD_SIZE = 5
 MAX_STEPS_WITHOUT_FOOD = 5 * BOARD_SIZE
 
 class BoardCell(Enum):
@@ -34,19 +34,21 @@ class SnakeGame:
                 self.fruit_position = new_pos
                 break
 
-    #TODO: use board only on print (REDO!)
-    #def build_board(self):
-    #    board = []
-    #    self.board = [[BoardCell.EMPTY.value for x in range(BOARD_SIZE + 2)] for y in range(BOARD_SIZE + 2)]
-    #    for x in range(BOARD_SIZE + 2):
-    #        for y in range(BOARD_SIZE + 2):
-    #            if x == 0 or y == 0 or x == BOARD_SIZE + 1 or y == BOARD_SIZE + 1:
-    #                self.board[y][x] = BoardCell.WALL.value
-    #    for piece in self.snake:
-    #        self.board[piece[1]][piece[0]] = BoardCell.SNAKE.value
-    #    
-    #    self.board[self.fruit_position[1]][self.fruit_position[0]] = BoardCell.FRUIT.value
-    #    return board
+    def print_board(self):
+        board = [[" " for x in range(BOARD_SIZE + 2)] for y in range(BOARD_SIZE + 2)]
+        for x in range(BOARD_SIZE + 2):
+            for y in range(BOARD_SIZE + 2):
+                if x == 0 or y == 0 or x == BOARD_SIZE + 1 or y == BOARD_SIZE + 1:
+                    board[y][x] = "#"
+        for piece in self.snake:
+            board[piece[1]][piece[0]] = "S"
+    
+        board[self.fruit_position[1]][self.fruit_position[0]] = "F"
+        
+        for row in board:
+            for cell in row:
+                print(cell, end='')
+            print('')
 
     #def print_board(self):
     #    board = self.build_board()
@@ -202,11 +204,11 @@ class SnakeGame:
                     #self.have_wall_on_south(),
                     #self.have_wall_on_east(),
                     #self.have_wall_on_west(),
-                    self.distance_to_north_south_wall(),
-                    self.distance_to_west_east_wall(),
-                    self.have_snake_on_north(),
-                    self.have_snake_on_south(),
-                    self.have_snake_on_east(),
-                    self.have_snake_on_west(),
-                    self.get_fruit_horizontal_distance(),
-                    self.get_fruit_vertical_distance()  ]
+                    [self.distance_to_north_south_wall()],
+                    [self.distance_to_west_east_wall()],
+                    [self.have_snake_on_north()],
+                    [self.have_snake_on_south()],
+                    [self.have_snake_on_east()],
+                    [self.have_snake_on_west()],
+                    [self.get_fruit_horizontal_distance()],
+                    [self.get_fruit_vertical_distance()]  ]

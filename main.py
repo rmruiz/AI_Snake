@@ -9,11 +9,11 @@ from population import Population
 
 POPULATION_SIZE = 2000#2000
 GENERATIONS = 100
-ITERATIONS_PER_GENERATION = 5
+ITERATIONS_PER_GENERATION = 1
 KEEP_X_PERC_BEST = 20 #20
-RANDOM_MEMBERS_PER_GENERATION = 30
-MUTATION_RATE = 3
-TOP_PARENTS_SELECTED = 100 #100
+RANDOM_MEMBERS_PER_GENERATION = 3
+MUTATION_RATE = 2
+TOP_PARENTS_SELECTED = 50 #100
 #CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_PER_GENERATION
 
 def main():
@@ -61,7 +61,6 @@ def main():
         logging.info(f"{gen} {stats['results'][gen]['min']} {stats['results'][gen]['max']} {stats['results'][gen]['avg']} {stats['results'][gen]['stdev']}")
 
     
-
 def config_new_logger():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)

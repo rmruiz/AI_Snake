@@ -120,18 +120,12 @@ class Population:
 
     def crossover_and_mutate(self, parents_ids, quantity, mutation_rate):
         if len(parents_ids) == 0:
-            raise "generaition quiality too poor"
+            raise "generation quality is too poor"
         while len(self.members) <= quantity:
-            #print(f"starting crossover")
             #Yes, father and mother could be the same
-            #father_id = self.select_random_parent(parents_ids)
-            #mother_id = self.select_random_parent(parents_ids)
-            
             father_id = self.select_proportional_by_fitness_parent(parents_ids)
             mother_id = self.select_proportional_by_fitness_parent(parents_ids)
             
-            #print(f"found a match! father:{father_id}, mother:{mother_id}")
-
             father_idx = mother_idx = -1
             for index, member in enumerate(self.members):
                 if member.id == father_id:
@@ -140,18 +134,9 @@ class Population:
                     mother_idx = index
                 if father_idx != -1 and mother_idx != -1:
                     break
-            #print(f"found origin - father:{father_idx}, mother:{mother_idx}")
-
-            #father_dna = self.members[father_idx].model.get_layer("dense1").get_weights()
-            #mother_dna = self.members[mother_idx].model.get_layer("dense1").get_weights()
-
-            #father_weight = father_dna[0]
-            #mother_weight = mother_dna[0]
-
+            
             father_weight = self.members[father_idx].model.weights
             mother_weight = self.members[mother_idx].model.weights
-
-            #print(f"father shape: {np.array(father_weight).shape}")
 
             mutate = False
             if randint(1,100) <= mutation_rate:
@@ -159,23 +144,12 @@ class Population:
 
             son_weight = mix(father_weight, mother_weight, mutate)
 
-            #father_bias = father_dna[1]
-            #mother_bias = mother_dna[1]
             father_biases = self.members[father_idx].model.biases
             mother_biases = self.members[mother_idx].model.biases
 
-            #print(f"fatherB shape: {np.array(father_bias).shape}")
-
             #TODO: maybe later we will need bias numbers
-            #son_bias = mix_5050(father_bias, mother_bias)
-            son_biases = father_biases
+            son_biases = mix(father_biases, mother_biases, mutate)
             
-            #print(f"father: {father_dna}")
-            #print(f"mother: {mother_dna}")
-            #print(f"son_weight: {son_weight}")
-            #print(f"son_bias: {son_bias}")
-
-            #print(f"son shape: {np.array(son_weight).shape}")
             son_dna = [son_weight, son_biases]
             
             self.add_member_from_dna(son_dna)
