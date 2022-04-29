@@ -25,7 +25,12 @@ class Population:
         best_fitness = 0
         for idx, member in enumerate(self.members):
             if member.fitness > best_fitness:
+                best_fitness = member.fitness
                 best = idx
+
+        print("")
+        print(f"Best so far: id[{self.members[best].id}] name[{self.members[best].name}] fitness[{self.members[best].fitness}]")
+        print("")
 
         data = {}
         data['sizes'] = self.members[best].model.sizes
@@ -51,22 +56,22 @@ class Population:
         #    t.get()
         end = time.time()
         logging.debug(f"Time elapsed:{end - start}")
-        print('||', end='', flush=True)
+        print('|')
 
     def add_random_member(self):
         self.members.append(Dna(self.next_id))
         #print(f"Adding member id:{self.next_id}")
         self.next_id = self.next_id + 1
 
-    def add_member_from_dna(self, dna):
+    def add_member_from_dna(self, weights, biases, father_name, mother_name, mutate):
         member = Dna(self.next_id)
+        member.name = f"{father_name}.{mother_name}"
+        if mutate:
+            member.name = f"M({member.name})"
         #print_model_details(member.model)
-
-        #model.get_layer(layerName).set_weights(...)
         #print(f"param dna: {dna}")
-        #member.model.get_layer("dense1").set_weights(dna)
-        member.model.weights = dna[0]
-        member.model.biases = dna[1]
+        member.model.weights = weights
+        member.model.biases = biases
 
         self.members.append(member)
         #print(f"Adding member id:{self.next_id}")
@@ -77,9 +82,12 @@ class Population:
             self.add_random_member()
 
     def kill_under_performants(self, percentage_to_kill):
-        results = sorted([member.fitness for member in self.members], reverse=False)
-        min_accepted_result = results[int(percentage_to_kill/100*len(results))]
-        self.members = [member for member in self.members if member.fitness > min_accepted_result]
+        #results = sorted([member.fitness for member in self.members], reverse=False)
+        #min_accepted_result = results[int(percentage_to_kill/100*len(results))]
+
+        kill_upto_index = int(len(self.members)*percentage_to_kill/100.0)
+        #print(f"Killing in the name of: {kill_upto_index}/{len(self.members)}")
+        self.members = [member for idx,member in enumerate(self.members) if idx >= kill_upto_index]
 
     def get_best_members_ids(self, quantity):
         #print([f"{member.id}/{member.fitness}" for member in self.members])
@@ -116,7 +124,8 @@ class Population:
             delete_me = selected_parent_id
         #TODO: delete this:
         print("We shouldn't be here")
-        return delete_me
+        raise
+        #return delete_me
 
     def crossover_and_mutate(self, parents_ids, quantity, mutation_rate):
         if len(parents_ids) == 0:
@@ -137,22 +146,17 @@ class Population:
             
             father_weight = self.members[father_idx].model.weights
             mother_weight = self.members[mother_idx].model.weights
+            father_biases = self.members[father_idx].model.biases
+            mother_biases = self.members[mother_idx].model.biases
 
             mutate = False
             if randint(1,100) <= mutation_rate:
                 mutate = True
 
             son_weight = mix(father_weight, mother_weight, mutate)
-
-            father_biases = self.members[father_idx].model.biases
-            mother_biases = self.members[mother_idx].model.biases
-
-            #TODO: maybe later we will need bias numbers
             son_biases = mix(father_biases, mother_biases, mutate)
             
-            son_dna = [son_weight, son_biases]
-            
-            self.add_member_from_dna(son_dna)
+            self.add_member_from_dna(son_weight, son_biases, self.members[father_idx].name, self.members[mother_idx].name, mutate)
 
 
 def mix(A,B, mutate=False):
@@ -196,3 +200,8 @@ def print_model_details(model):
         print("Shape: ",layer.get_weights()[1].shape,'\n',layer.get_weights()[1],'\n')
 
 
+"""
+name dinamics
+
+M(M(1.2.5.13).8)
+"""

@@ -22,10 +22,10 @@ class Dna:
         #self.layer1 = tf.keras.layers.Dense(units=NEURONS_PER_LAYER, input_shape=[INPUT_SIZE], name='dense1')
         #self.layerout = tf.keras.layers.Dense(units=OUTPUT_SIZE, name='denseout')
         #self.model = tf.keras.Sequential([self.layer1, self.layerout])
-        self.model = Network([INPUT_SIZE, 10, 10, OUTPUT_SIZE])
+        self.model = Network([INPUT_SIZE, 6, OUTPUT_SIZE])
         self.fitness = 0
         self.name = str(id)
-        print(':', end='', flush=True)
+        #print(':', end='', flush=True)
 
     def get_weights(self):
         #return self.layer1.get_weights()
@@ -41,7 +41,6 @@ class Dna:
     def test_dna_to_update_fitness(self, print_test=False):
 
         sg = SnakeGame()
-        #sg.print_board()
         while(sg.alive):
             input = sg.get_current_input()
             if print_test:
@@ -58,17 +57,18 @@ class Dna:
         self.fitness = sg.get_fitness_score()
         if print_test:
             print("THE_END")
-            print(f"apple:{sg.fruit_position}")
+            print(f"apple:{sg.apple_position}")
             print(f"snake:{sg.snake}")
-        
-        
+            print(f"fitnes:{self.fitness}")
         return self.fitness
 
     def next_move_from_input(self, input):
         #prediction = self.model.predict([input])
         #print(f"input={input}")
+        #print(f"input.shape={np.array(input).shape}")
         prediction = self.model.feedforward(input)
         #print(f"prediction={prediction}")
+        #print(f"prediction.shape={np.array(prediction).shape}")
         #print(prediction)
         if prediction[0][0] >= prediction[1][0]:
             if prediction[0][0] >= prediction[2][0]:

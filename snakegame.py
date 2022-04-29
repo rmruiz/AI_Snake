@@ -1,10 +1,10 @@
+from distutils.log import error
 from random import randint, random
 from enum import Enum
-
-#random.seed(0)
+import ssl
 
 BOARD_SIZE = 5
-MAX_STEPS_WITHOUT_FOOD = 5 * BOARD_SIZE
+MAX_STEPS_WITHOUT_FOOD = 500 #5 * BOARD_SIZE
 
 class BoardCell(Enum):
     EMPTY = 0
@@ -12,17 +12,22 @@ class BoardCell(Enum):
     SNAKE = 2
     FRUIT = 3
 
+class Direction(Enum):
+    NORTH = 0
+    SOUTH = 1
+    EAST = 2
+    WEST = 3
+
 class SnakeGame:
     def __init__(self):
-        self.snake = [[3, 3]] #starting point (x,y) (horizontal, vertical)
-        self.fruit_position = None
+        self.snake = [[int(BOARD_SIZE/2)+1, int(BOARD_SIZE/2)+1]] #starting point (x,y) (horizontal, vertical)
+        self.apple_position = None
         self.new_fruit()
-        #self.direction = 0 #0N, 1E, 2S, 3W
-        #self.new_board()
         self.alive = True
         self.apples_eaten = 0
         self.steps_util_death = MAX_STEPS_WITHOUT_FOOD
         self.total_steps = 0
+        self.direction = Direction.NORTH
 
     def get_snake_head_pos(self):
         return self.snake[-1]
@@ -31,7 +36,7 @@ class SnakeGame:
         while True:
             new_pos = [randint(1, BOARD_SIZE), randint(1, BOARD_SIZE)]
             if new_pos not in self.snake:
-                self.fruit_position = new_pos
+                self.apple_position = new_pos
                 break
 
     def print_board(self):
@@ -43,7 +48,7 @@ class SnakeGame:
         for piece in self.snake:
             board[piece[1]][piece[0]] = "S"
     
-        board[self.fruit_position[1]][self.fruit_position[0]] = "F"
+        board[self.apple_position[1]][self.apple_position[0]] = "F"
         
         for row in board:
             for cell in row:
@@ -54,80 +59,66 @@ class SnakeGame:
     #    board = self.build_board()
     #    print(panda.DataFrame(board)) 
 
+    #TODO: return how far snake is on each direction
     def have_snake_on_north(self):
-        x, y = self.get_snake_head_pos()
-        if [x, y-1] in self.snake:
-            return 1
-        return -1
+        if north(self.get_snake_head_pos()) in self.snake:
+            return 1.0
+        return -1.0
     def have_snake_on_south(self):
-        x, y = self.get_snake_head_pos()
-        if [x, y+1] in self.snake:
-            return 1
-        return -1 
-
+        if south(self.get_snake_head_pos()) in self.snake:
+            return 1.0
+        return -1.0
     def have_snake_on_west(self):
-        x, y = self.get_snake_head_pos()
-        if [x-1, y] in self.snake:
-            return 1
-        return -1 
-
+        if west(self.get_snake_head_pos()) in self.snake:
+            return 1.0
+        return -1.0
     def have_snake_on_east(self):
-        x, y = self.get_snake_head_pos()
-        if [x+1, y] in self.snake:
-            return 1
-        return -1
+        if east(self.get_snake_head_pos()) in self.snake:
+            return 1.0
+        return -1.0
 
     #1 touching north, -1 touching south, 0 in the middle
     def distance_to_north_south_wall(self):
         x=self.get_snake_head_pos()[0]
-        m=(-2)/(BOARD_SIZE-1)
+        m=(-2.0)/(BOARD_SIZE-1.0)
         b=1-m
         y=m*x+b
         return y
-
     def distance_to_west_east_wall(self):
         x=self.get_snake_head_pos()[1]
-        m=(-2)/(BOARD_SIZE-1)
+        m=(-2.0)/(BOARD_SIZE-1.0)
         b=1-m
         y=m*x+b
         return y
 
     def have_wall_on_north(self):
-        x, y = self.get_snake_head_pos()
-        #if self.board[y-1][x] == BoardCell.WALL.value:
-        if y == 1:
-            return 1
-        return -1
+        if is_wall(north(self.get_snake_head_pos())):
+            return 1.0
+        return -1.0
     def have_wall_on_south(self):
-        x, y = self.get_snake_head_pos()
-        #if self.board[y+1][x] == BoardCell.WALL.value:
-        if y == BOARD_SIZE:
-            return 1
-        return -1
+        if is_wall(south(self.get_snake_head_pos())):
+            return 1.0
+        return -1.0
     def have_wall_on_west(self):
-        x, y = self.get_snake_head_pos()
-        #if self.board[y][x-1] == BoardCell.WALL.value:
-        if x == 0:
-            return 1
-        return -1
+        if is_wall(west(self.get_snake_head_pos())):
+            return 1.0
+        return -1.0
     def have_wall_on_east(self):
-        x, y = self.get_snake_head_pos()
-        #if self.board[y][x+1] == BoardCell.WALL.value:
-        if x == BOARD_SIZE:
-            return 1
-        return -1
+        if is_wall(east(self.get_snake_head_pos())):
+            return 1.0
+        return -1.0
 
     def get_fruit_horizontal_distance(self):
-        #print(f"fruit:{self.fruit_position}")
-        #print(self.fruit_position[0])
+        #print(f"fruit:{self.apple_position}")
+        #print(self.apple_position[0])
         #print(f"snake:{self.get_snake_head_pos()}")
         #print(self.get_snake_head_pos()[0])
-        normalized_x_distance = (self.fruit_position[0]-self.get_snake_head_pos()[0])/(BOARD_SIZE-1)
+        normalized_x_distance = (self.apple_position[0]-self.get_snake_head_pos()[0])/(BOARD_SIZE-1)
         #print(f"distance={normalized_x_distance}")
         return normalized_x_distance
 
     def get_fruit_vertical_distance(self):
-        return (self.fruit_position[1]-self.get_snake_head_pos()[1])/(BOARD_SIZE-1)
+        return (self.apple_position[1]-self.get_snake_head_pos()[1])/(BOARD_SIZE-1)
 
     def move_snake(self, direction, print_test=False):
         #print(f"starting move in {direction=} [steps={self.steps_util_death}]")
@@ -146,34 +137,34 @@ class SnakeGame:
         elif direction == "east":
             x = 1
 
-        new_head_position = [self.get_snake_head_pos()[0]+x,self.get_snake_head_pos()[1]+y]
+        next_head_position = [self.get_snake_head_pos()[0]+x,self.get_snake_head_pos()[1]+y]
         #check for apple
         got_apple = False
-        if self.fruit_position == new_head_position:
+        if self.apple_position == next_head_position:
             self.apples_eaten = self.apples_eaten + 1
-            self.steps_util_death = MAX_STEPS_WITHOUT_FOOD
+            self.steps_util_death = MAX_STEPS_WITHOUT_FOOD + 1
             got_apple = True
             if print_test:
                 print(" apple eaten!")
 
         #check for wall or body part
-        #if self.board[new_head_position[1]][new_head_position[0]] == BoardCell.WALL.value:
-        if new_head_position[0] == 0 or new_head_position[1] == 0 or new_head_position[0] == BOARD_SIZE+1 or new_head_position[1] == BOARD_SIZE+1:
+        #if self.board[next_head_position[1]][next_head_position[0]] == BoardCell.WALL.value:
+        elif is_wall(next_head_position):
             self.alive = False
             if print_test:
                 print(" me is dead :( - hit a wall")
             return
 
-        if new_head_position in self.snake:
+        elif next_head_position in self.snake:
             self.alive = False
             if print_test:
                 print(" me is dead :( - hit myself")
-                #print(new_head_position)
+                #print(next_head_position)
                 #print(self.snake)                
             return
 
         #move snake
-        self.snake.append(new_head_position)
+        self.snake.append(next_head_position)
         #print(" the snake (with new head):")
         #print(self.snake)
 
@@ -197,7 +188,7 @@ class SnakeGame:
         return
     
     def get_fitness_score(self):
-        return self.total_steps + self.apples_eaten*self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
+        return int(self.total_steps/4) + self.apples_eaten*self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
 
     def get_current_input(self):
         return [    #self.have_wall_on_north(), # No:-1, Yes:1
@@ -212,3 +203,15 @@ class SnakeGame:
                     [self.have_snake_on_west()],
                     [self.get_fruit_horizontal_distance()],
                     [self.get_fruit_vertical_distance()]  ]
+
+def north(pos):
+    return [pos[0],pos[1]-1]
+def south(pos):
+    return [pos[0],pos[1]+1]
+def west(pos):
+    return [pos[0]-1,pos[1]]
+def east(pos):
+    return [pos[0]+1,pos[1]]
+
+def is_wall(pos):
+    return pos[0] == 0 or pos[1] == 0 or pos[0] == BOARD_SIZE+1 or pos[1] == BOARD_SIZE+1
