@@ -1,53 +1,83 @@
 import logging
 import sys
 import time
+from unittest import result
 import numpy as np
 
 from population import Population
 
 from dna import Dna
 
-POPULATION_SIZE = 10#2000
-GENERATIONS = 3 
+POPULATION_SIZE = 2000#2000
+GENERATIONS = 100
 ITERATIONS_PER_GENERATION = 4
-KEEP_X_PERC_BEST = 100 #20
+#KEEP_X_PERC_BEST = 100 #20
 RANDOM_MEMBERS_TO_ADD = 0
-MUTATION_RATE = 0
-TOP_PARENTS_SELECTED = 10 #100
+MUTATION_RATE = 70
+TOP_PARENTS_SELECTED = 200 #100
 ADD_PARENTS = False
-CROSSOVERS_TO_ADD = 50
+CROSSOVERS_TO_ADD = 2000
 #CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_TO_ADD
 
 def main():
-    stats = {}
-    stats['config'] = {}
-    stats['config']['POPULATION_SIZE'] = POPULATION_SIZE
-    stats['config']['GENERATIONS'] = GENERATIONS
-    stats['config']['KEEP_X_PERC_BEST'] = KEEP_X_PERC_BEST
-    stats['config']['RANDOM_MEMBERS_TO_ADD'] = RANDOM_MEMBERS_TO_ADD
-    stats['results'] = {}
+    #stats = {}
+    #stats['config'] = {}
+    #stats['config']['POPULATION_SIZE'] = POPULATION_SIZE
+    #stats['config']['GENERATIONS'] = GENERATIONS
+    #stats['config']['KEEP_X_PERC_BEST'] = KEEP_X_PERC_BEST
+    #stats['config']['RANDOM_MEMBERS_TO_ADD'] = RANDOM_MEMBERS_TO_ADD
+    #stats['results'] = {}
     config_new_logger()
 
     logging.info(f"STARTING NEW RUN")
 
     population = Population(size=POPULATION_SIZE)  
     for gen in range(GENERATIONS):
+        print("")
         print(f"Starting Generation #{gen}")
+        print(f"Population size: {len(population.members)}")
         
         print(f"Updating fitness for Generation #{gen}")
         population.update_fitness(iterations=ITERATIONS_PER_GENERATION)
+        print(f"Updating fitness for Generation #{gen} - completed")
+
+        results = [member.fitness for member in population.members]
+        top_results = sorted(results)[-10:]
+        print(f"Results for Generation #{gen}:{top_results}")
         
         new_population = Population(0)
+        
         parents_dna: list[Dna]
         parents_dna = population.get_parents_dna(TOP_PARENTS_SELECTED) #list of dns
+        
+        results = [parent.fitness for parent in parents_dna]
+        top_results = sorted(results)[-10:]
+        print(f"Results for Parents in Gerenration #{gen}:{top_results}")
+
         if ADD_PARENTS:
+            print(f"Adding parents for Generation #{gen}")
             new_population.add_members_from_dna(parents_dna)
+            print(f"Adding parents for Generation #{gen} - completed")
+        
         #add CROSSOVERS_TO_ADD crossing 1 weight or 1 biases
-        new_population.add_crossover_members_from_dna(parents_dna, CROSSOVERS_TO_ADD, MUTATION_RATE)
+        """
+        crossover_type=all (swap all randomly)
+        crossover_type=perc (swal perc% randomly) (fixed in 50%)
+        crossover_type=single (swap one value randomly)
+
+        crossover_w_or_b=weights
+        crossover_w_or_b=biases
+        crossover_w_or_b=both
+        crossover_w_or_b=random
+        """
+        print(f"Adding crossovers for Generation #{gen}")
+        new_population.add_crossover_members_from_dna(parents_dna, CROSSOVERS_TO_ADD, MUTATION_RATE, "single", "random")
+        print(f"Adding crossovers for Generation #{gen} - completed")
         #   for each crossovers add both or only ADD_CROSSOVER_WINNER
         # fill with RANDOM_MEMBERS_TO_ADD
         print(f"Filling some random members for Generation #{gen}")
         population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
+        print(f"Filling some random members for Generation #{gen} - completed")
 
         #Selection
         #print(f"population complete: {len(population.members)} members")
@@ -76,12 +106,12 @@ def main():
         
         #print(f"Filling some random members for Generation #{gen}")
         #population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
-
-        population.save_best_to_file()
+        population=new_population
+        #population.save_best_to_file()
         
-    logging.info(stats)
-    for gen in stats['results']: 
-        logging.info(f"{gen} {stats['results'][gen]['min']} {stats['results'][gen]['max']} {stats['results'][gen]['avg']} {stats['results'][gen]['stdev']}")
+    #logging.info(stats)
+    #for gen in stats['results']: 
+    #    logging.info(f"{gen} {stats['results'][gen]['min']} {stats['results'][gen]['max']} {stats['results'][gen]['avg']} {stats['results'][gen]['stdev']}")
 
     
 def config_new_logger():

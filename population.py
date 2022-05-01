@@ -9,6 +9,7 @@ import json
 import jsonpickle
 from snakegame import SnakeGame
 from json import JSONEncoder
+import copy
 
 import multiprocessing
 from joblib import Parallel, delayed
@@ -22,15 +23,18 @@ class Population:
         self.next_id = size
         self.members = [Dna(i) for i in range(size)]
 
-    def add_crossover_members_from_dna(self, parents_dna: list[Dna], quantity, mutation_rate:int):
+    def add_crossover_members_from_dna(self, parents_dna: list[Dna], quantity, mutation_rate:int, crossover_type, crossover_w_or_b):
 
         mutate: bool = mutation_rate > randint(1,100)
         new_dnas = []
         for _ in range(quantity):
             father_dna = new_select_proportional_by_fitness(parents_dna)
+            #print(f"father_dna:{father_dna.model.weights}")
             mother_dna = new_select_proportional_by_fitness(parents_dna)
+            #print(f"mother_dna:{mother_dna.model.weights}")
 
-            new_dna = mix_dna(father_dna, mother_dna, mix_type="all", mix_weights_or_biases="both", mutate=mutate)
+            new_dna = mix_dna(father_dna, mother_dna, mix_type=crossover_type, mix_weights_or_biases=crossover_w_or_b, mutate=mutate)
+            #print(f"new_dna:{new_dna.model.weights}")
             new_dnas.append(new_dna)
         self.add_members_from_dna(new_dnas)
 
@@ -38,7 +42,7 @@ class Population:
         for dna in list_of_dna:
             new_member = Dna(self.next_id, empty=True)
             self.next_id = self.next_id + 1
-            new_member.model = dna
+            new_member.model = dna.model
             self.members.append(new_member)
 
     def get_parents_dna(self, quantity:int) -> list[Dna]:
@@ -70,32 +74,15 @@ class Population:
             json.dump(json_data, f, ensure_ascii=False, indent=4)
 
     def update_fitness(self, iterations=1):
-        
-        #pool = ThreadPool(processes=1)
-        #threads = []
-        
-        num_cores = multiprocessing.cpu_count()
-        #results1 = Parallel(n_jobs=num_cores)
-        #(
-        #    delayed(game.start)
-        #    (neural_net=networks[i]) for i in range(len(networks))
-        #)
+        #num_cores = multiprocessing.cpu_count()
+        num_cores = 1 # use all of them
         start = time.time()
         results = Parallel(n_jobs=num_cores) ( delayed( new_iterate_to_update_fitness ) ( member, iterations ) for member in self.members )
 
         for i, member in enumerate(self.members):
             member.fitness = results[i]
-        
-        #for member in self.members:
-        #    logging.debug(f"Testing DNA #{member.id}")
-        #    #threads.append(pool.apply_async(member.test_dna_to_update_fitness))
-        #    member.iterate_to_update_fitness(iterations)
-        #    print('.', end='', flush=True)
-        #for t in threads:
-        #    t.get()
         end = time.time()
         logging.debug(f"Time elapsed:{end - start}")
-        print('|')
 
     def add_random_member(self):
         self.members.append(Dna(self.next_id))
@@ -198,24 +185,23 @@ class Population:
             #self.add_member_from_dna(son_weight, son_biases, self.members[father_idx].name, self.members[mother_idx].name, mutate)
             self.add_member_from_dna(son_weight, son_biases)
 
-def new_iterate_to_update_fitness(member, iterations=1):
+def new_iterate_to_update_fitness(member, iterations=1) -> int:
     results = []
     for i in range(iterations):
         result = new_test_dna_to_update_fitness(member)
         results.append(result)
     return int(sum(results)/len(results))
 
-def new_test_dna_to_update_fitness(member):
-
+def new_test_dna_to_update_fitness(member:Dna) -> int:
     sg = SnakeGame()
     while(sg.alive):
         input = sg.get_current_input()
         next_move = member.next_move_from_input(input)
         sg.move_snake(next_move)
-
+    #print(".",end='',flush=True)
     return sg.get_fitness_score()
 
-def mix_dna(dnaA: Dna,dnB: Dna, mix_type:str="single", mix_weights_or_biases:str="random", mutate:bool=False):
+def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:str="random", mutate:bool=False):
     """
     mix_type=all (swap all randomly)
     mix_type=perc (swal perc% randomly)
@@ -227,10 +213,12 @@ def mix_dna(dnaA: Dna,dnB: Dna, mix_type:str="single", mix_weights_or_biases:str
     mix_weights_or_biases=random
     """
     percentage_to_mix = 50
-
+    i=0
+    j=0
+    k=0
     new_dna:Dna = Dna(0,empty=True)
-    new_dna.model.weights = dnaA.model.weights
-    new_dna.model.biases = dnaA.model.biases
+    new_dna.model.weights = copy.deepcopy(dnaA.model.weights)
+    new_dna.model.biases = copy.deepcopy(dnaA.model.biases)
 
     change_weights:bool = (mix_weights_or_biases == "random" and randint(0,1) == 0) or mix_weights_or_biases == "weights" or mix_weights_or_biases == "both"
     change_biases:bool = (mix_weights_or_biases == "random" and randint(0,1) == 1) or mix_weights_or_biases == "biases" or mix_weights_or_biases == "both"
@@ -241,24 +229,32 @@ def mix_dna(dnaA: Dna,dnB: Dna, mix_type:str="single", mix_weights_or_biases:str
                 for j, row in enumerate(w):
                     for k in range(len(row)):
                         if mix_type == all or percentage_to_mix > randint(1,100):
-                            new_dna.model.weights[i][j][k] = dnB.model.weights[i][j][k]
+                            new_dna.model.weights[i][j][k] = dnaB.model.weights[i][j][k]
         if change_biases:
             for i, b in enumerate(dnaA.model.biases):
                 for j, row in enumerate(b):
                     for k in range(len(row)):
                         if mix_type == all or percentage_to_mix > randint(1,100):
-                            new_dna.model.biases[i][j][k] = dnB.model.biases[i][j][k]
+                            new_dna.model.biases[i][j][k] = dnaB.model.biases[i][j][k]
     else: #mix_type == "single"
         if change_weights:
             i = randint(0,len(new_dna.model.weights)-1)
             j = randint(0,len(new_dna.model.weights[i])-1)
             k = randint(0,len(new_dna.model.weights[i][j])-1)
-            new_dna.model.weights[i][j][k] = dnB.model.weights[i][j][k]
+            new_dna.model.weights[i][j][k] = dnaB.model.weights[i][j][k]
+            #print(dnaA.model.weights[i][j][k])
+            #print(dnaB.model.weights[i][j][k])
+            #print(new_dna.model.weights[i][j][k])
         if change_biases:
             i = randint(0,len(new_dna.model.biases)-1)
             j = randint(0,len(new_dna.model.biases[i])-1)
             k = randint(0,len(new_dna.model.biases[i][j])-1)
-            new_dna.model.biases[i][j][k] = dnB.model.weights[i][j][k]
+            new_dna.model.biases[i][j][k] = dnaB.model.biases[i][j][k]
+            #print(dnaA.model.biases[i][j][k])
+            #print(dnaB.model.biases[i][j][k])
+            #print(new_dna.model.biases[i][j][k])
+
+    #print(f"switch in:[{i},{j},{k}]")
         
     if mutate:
         if change_weights:
@@ -266,32 +262,24 @@ def mix_dna(dnaA: Dna,dnB: Dna, mix_type:str="single", mix_weights_or_biases:str
             j = randint(0,len(new_dna.model.weights[i])-1)
             k = randint(0,len(new_dna.model.weights[i][j])-1)
             new_dna.model.weights[i][j][k] = (random()-0.5)*2
+            #print(dnaA.model.weights[i][j][k])
+            #print(dnaB.model.weights[i][j][k])
+            #print(new_dna.model.weights[i][j][k])
         if change_biases:
             i = randint(0,len(new_dna.model.biases)-1)
             j = randint(0,len(new_dna.model.biases[i])-1)
             k = randint(0,len(new_dna.model.biases[i][j])-1)
             new_dna.model.biases[i][j][k] = (random()-0.5)*2
+            #print(dnaA.model.biases[i][j][k])
+            #print(dnaB.model.biases[i][j][k])
+            #print(new_dna.model.biases[i][j][k])
+    
+        #print(f"mutate:{mutate} [{i},{j},{k}]")        
 
     return new_dna
 
 def mix(A,B, mix_type="all", mix_weights_or_biases="both", mutate=False):
-    """
-    mixes lists of np arrays A and B (of weights or biases)
-    selecting items for each positions randomly
-    creating list C with same quantity and array structures
 
-    if mutate then select a single data of a single array to randomize
-
-    mix_type=all (swap all randomly)
-    mix_type=perc (swal perc% randomly)
-    mix_type=single (swap one value randomly)
-
-    mix_weights_or_biases=weights
-    mix_weights_or_biases=biases
-    mix_weights_or_biases=both
-    mix_weights_or_biases=random
-
-    """
     C = []
     for i, WoB in enumerate(A):
         new_WoB = []

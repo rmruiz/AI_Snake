@@ -28,7 +28,7 @@ class Dna:
             {"input_dim": 18, "output_dim": OUTPUT_SIZE, "activation": "sigmoid"},
         ]
         self.model = Network(nn_architecture, empty)
-        print('D', end='', flush=True)
+        #print('D', end='', flush=True)
 
     #def get_weights(self):
     #    return self.model.weights
