@@ -5,14 +5,18 @@ import numpy as np
 
 from population import Population
 
-POPULATION_SIZE = 2000#2000
-GENERATIONS = 50
-ITERATIONS_PER_GENERATION = 1
-KEEP_X_PERC_BEST = 20 #20
-RANDOM_MEMBERS_PER_GENERATION = 30
-MUTATION_RATE = 5
-TOP_PARENTS_SELECTED = 100 #100
-#CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_PER_GENERATION
+from dna import Dna
+
+POPULATION_SIZE = 10#2000
+GENERATIONS = 3 
+ITERATIONS_PER_GENERATION = 4
+KEEP_X_PERC_BEST = 100 #20
+RANDOM_MEMBERS_TO_ADD = 0
+MUTATION_RATE = 0
+TOP_PARENTS_SELECTED = 10 #100
+ADD_PARENTS = False
+CROSSOVERS_TO_ADD = 50
+#CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_TO_ADD
 
 def main():
     stats = {}
@@ -20,7 +24,7 @@ def main():
     stats['config']['POPULATION_SIZE'] = POPULATION_SIZE
     stats['config']['GENERATIONS'] = GENERATIONS
     stats['config']['KEEP_X_PERC_BEST'] = KEEP_X_PERC_BEST
-    stats['config']['RANDOM_MEMBERS_PER_GENERATION'] = RANDOM_MEMBERS_PER_GENERATION
+    stats['config']['RANDOM_MEMBERS_TO_ADD'] = RANDOM_MEMBERS_TO_ADD
     stats['results'] = {}
     config_new_logger()
 
@@ -28,23 +32,37 @@ def main():
 
     population = Population(size=POPULATION_SIZE)  
     for gen in range(GENERATIONS):
-        print(f"{gen}", end='', flush=True)
+        print(f"Starting Generation #{gen}")
         
+        print(f"Updating fitness for Generation #{gen}")
         population.update_fitness(iterations=ITERATIONS_PER_GENERATION)
         
+        new_population = Population(0)
+        parents_dna: list[Dna]
+        parents_dna = population.get_parents_dna(TOP_PARENTS_SELECTED) #list of dns
+        if ADD_PARENTS:
+            new_population.add_members_from_dna(parents_dna)
+        #add CROSSOVERS_TO_ADD crossing 1 weight or 1 biases
+        new_population.add_crossover_members_from_dna(parents_dna, CROSSOVERS_TO_ADD, MUTATION_RATE)
+        #   for each crossovers add both or only ADD_CROSSOVER_WINNER
+        # fill with RANDOM_MEMBERS_TO_ADD
+        print(f"Filling some random members for Generation #{gen}")
+        population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
+
         #Selection
         #print(f"population complete: {len(population.members)} members")
-        population.kill_under_performants(100-KEEP_X_PERC_BEST)
+        #print(f"Killing loosers for Generation #{gen}")
+        #population.kill_under_performants(100-KEEP_X_PERC_BEST)
         #print(f"population alive: {len(population.members)} sourvivours")
 
-        results = [member.fitness for member in population.members]
-        logging.info(results)
+        #results = [member.fitness for member in population.members]
+        #logging.info(results)
         #print(f"{gen} {min(results)} {max(results)} {np.mean(results)} {np.std(results)}")
 
         #print(f"{[member.name for member in population.members]}")
         
         #crossover and mutation
-        parents_ids = population.get_best_members_ids(TOP_PARENTS_SELECTED)
+        #parents_ids = population.get_best_members_ids(TOP_PARENTS_SELECTED)
         #print(f"PARENTS (TOP#{TOP_PARENTS_SELECTED})")
         #for i,member in enumerate(population.members):
         #    if member.id in parents_ids:
@@ -53,10 +71,11 @@ def main():
         #for i,member in enumerate(population.members):
         #    if member.id not in parents_ids:
         #        print(f"idx[{i}] id[{member.id}] name[{member.name}] fitness[{member.fitness}]")
-
-        population.crossover_and_mutate(parents_ids, POPULATION_SIZE-RANDOM_MEMBERS_PER_GENERATION-1, MUTATION_RATE)
+        #print(f"Crossover and Mutation for Generation #{gen}")
+        #population.crossover_and_mutate(parents_ids, POPULATION_SIZE-RANDOM_MEMBERS_TO_ADD-1, MUTATION_RATE)
         
-        population.fill_with_random_members(RANDOM_MEMBERS_PER_GENERATION)
+        #print(f"Filling some random members for Generation #{gen}")
+        #population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
 
         population.save_best_to_file()
         

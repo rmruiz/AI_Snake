@@ -1,35 +1,37 @@
-#import os
-#os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
-
-#import tensorflow as tf
-from time import sleep
 import numpy as np
 
+from time import sleep
+from enum import Enum
+
 from snakegame import SnakeGame
+from nn2 import Network
 
-from nn import Network
-
-INPUT_SIZE = 8
-OUTPUT_SIZE = 4
+INPUT_SIZE = 13
+OUTPUT_SIZE = 3
 HIDDEN_LAYERS = 1
 NEURONS_PER_LAYER = 6
-import warnings
+
+class Output(Enum):
+    LEFT = 0
+    STRAIGHT = 1
+    RIGHT = 2
 
 class Dna:
     #creates a random DNA
-    def __init__(self, id):
+    def __init__(self, id, empty=False):
         self.id = id
-        #self.layer1 = tf.keras.layers.Dense(units=NEURONS_PER_LAYER, input_shape=[INPUT_SIZE], name='dense1')
-        #self.layerout = tf.keras.layers.Dense(units=OUTPUT_SIZE, name='denseout')
-        #self.model = tf.keras.Sequential([self.layer1, self.layerout])
-        self.model = Network([INPUT_SIZE, 6, OUTPUT_SIZE])
+        self.model = None
         self.fitness = 0
-        self.name = str(id)
-        #print(':', end='', flush=True)
+        
+        nn_architecture = [
+            {"input_dim": INPUT_SIZE, "output_dim": 18, "activation": "relu"},
+            {"input_dim": 18, "output_dim": OUTPUT_SIZE, "activation": "sigmoid"},
+        ]
+        self.model = Network(nn_architecture, empty)
+        print('D', end='', flush=True)
 
-    def get_weights(self):
-        #return self.layer1.get_weights()
-        return self.model.weights
+    #def get_weights(self):
+    #    return self.model.weights
 
     def iterate_to_update_fitness(self, iterations=1):
         results = []
@@ -52,7 +54,7 @@ class Dna:
             if print_test:
                 print(f"fitness:{sg.get_fitness_score()}")  
                 sg.print_board()
-                sleep(1)  
+                sleep(0.6)  
         #calculate new fitness
         self.fitness = sg.get_fitness_score()
         if print_test:
@@ -67,22 +69,9 @@ class Dna:
         #print(f"input={input}")
         #print(f"input.shape={np.array(input).shape}")
         prediction = self.model.feedforward(input)
+        
         #print(f"prediction={prediction}")
         #print(f"prediction.shape={np.array(prediction).shape}")
         #print(prediction)
-        if prediction[0][0] >= prediction[1][0]:
-            if prediction[0][0] >= prediction[2][0]:
-                if prediction[0][0] >= prediction[3][0]:
-                    return "north"
-        if prediction[1][0] >= prediction[0][0]:
-            if prediction[1][0] >= prediction[2][0]:
-                if prediction[1][0] >= prediction[3][0]:
-                    return "south" 
-        if prediction[2][0] >= prediction[0][0]:
-            if prediction[2][0] >= prediction[1][0]:
-                if prediction[2][0] >= prediction[3][0]:
-                    return "west"
-        if prediction[3][0] >= prediction[0][0]:
-            if prediction[3][0] >= prediction[1][0]:
-                if prediction[3][0] >= prediction[2][0]:
-                    return "east"
+        return np.argmax(prediction)
+

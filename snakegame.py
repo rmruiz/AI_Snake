@@ -1,10 +1,8 @@
-from distutils.log import error
 from random import randint, random
 from enum import Enum
-import ssl
 
-BOARD_SIZE = 5
-MAX_STEPS_WITHOUT_FOOD = 500 #5 * BOARD_SIZE
+BOARD_SIZE = 18
+MAX_STEPS_WITHOUT_FOOD = 500 #5 * BOARD_SIZE * BOARD_SIZE
 
 class BoardCell(Enum):
     EMPTY = 0
@@ -14,13 +12,19 @@ class BoardCell(Enum):
 
 class Direction(Enum):
     NORTH = 0
-    SOUTH = 1
-    EAST = 2
+    EAST = 1
+    SOUTH = 2
     WEST = 3
+
+class Output(Enum):
+    LEFT = 0
+    STRAIGHT = 1
+    RIGHT = 2
 
 class SnakeGame:
     def __init__(self):
-        self.snake = [[int(BOARD_SIZE/2)+1, int(BOARD_SIZE/2)+1]] #starting point (x,y) (horizontal, vertical)
+        #self.snake = [[int(BOARD_SIZE/2)+1, int(BOARD_SIZE/2)+1]] #starting point (x,y) (horizontal, vertical)
+        self.snake = [ [9, 12], [9, 11], [9, 10], [10, 10] ]
         self.apple_position = None
         self.new_fruit()
         self.alive = True
@@ -40,6 +44,8 @@ class SnakeGame:
                 break
 
     def print_board(self):
+        print(self.snake)
+        print(self.apple_position)
         board = [[" " for x in range(BOARD_SIZE + 2)] for y in range(BOARD_SIZE + 2)]
         for x in range(BOARD_SIZE + 2):
             for y in range(BOARD_SIZE + 2):
@@ -47,6 +53,8 @@ class SnakeGame:
                     board[y][x] = "#"
         for piece in self.snake:
             board[piece[1]][piece[0]] = "S"
+
+        board[self.get_snake_head_pos()[1]][self.get_snake_head_pos()[0]] = "H"
     
         board[self.apple_position[1]][self.apple_position[0]] = "F"
         
@@ -120,24 +128,32 @@ class SnakeGame:
     def get_fruit_vertical_distance(self):
         return (self.apple_position[1]-self.get_snake_head_pos()[1])/(BOARD_SIZE-1)
 
-    def move_snake(self, direction, print_test=False):
+    def move_snake(self, turn, print_test=False):
         #print(f"starting move in {direction=} [steps={self.steps_util_death}]")
         #print(" the snake:")
         #print(self.snake)
         if print_test:
-            print(f"D:{direction}")
-        x = 0
-        y = 0
-        if direction == "north":
-            y = -1
-        elif direction == "south":
-            y = 1
-        elif direction == "west":
-            x = -1
-        elif direction == "east":
-            x = 1
+            
+            print(f"have:{self.direction}")
+            print(f"Got:{turn} {Output(turn)}")
+        if turn == Output.LEFT.value:
+            self.direction = Direction((self.direction.value - 1)%4)
+        if turn == Output.RIGHT.value:
+            self.direction = Direction((self.direction.value + 1)%4)
+        if print_test:
+            print(f"result:{self.direction}")
 
-        next_head_position = [self.get_snake_head_pos()[0]+x,self.get_snake_head_pos()[1]+y]
+        next_head_position = []
+        if self.direction == Direction.NORTH:
+            next_head_position = north(self.get_snake_head_pos())
+        elif self.direction == Direction.SOUTH:
+            next_head_position = south(self.get_snake_head_pos())
+        elif self.direction == Direction.EAST:
+            next_head_position = east(self.get_snake_head_pos())
+        elif self.direction == Direction.WEST:
+            next_head_position = west(self.get_snake_head_pos())
+
+        #next_head_position = [self.get_snake_head_pos()[0]+x,self.get_snake_head_pos()[1]+y]
         #check for apple
         got_apple = False
         if self.apple_position == next_head_position:
@@ -188,13 +204,16 @@ class SnakeGame:
         return
     
     def get_fitness_score(self):
-        return int(self.total_steps/4) + self.apples_eaten*self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
+        #return self.total_steps*self.apples_eaten**2 # + self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
+        #return int(10000/self.total_steps)*self.apples_eaten**2
+        return self.total_steps*((self.apples_eaten+1)**2)
 
     def get_current_input(self):
-        return [    #self.have_wall_on_north(), # No:-1, Yes:1
-                    #self.have_wall_on_south(),
-                    #self.have_wall_on_east(),
-                    #self.have_wall_on_west(),
+        return [    [self.have_wall_on_north()], # No:-1, Yes:1
+                    [self.have_wall_on_south()],
+                    [self.have_wall_on_east()],
+                    [self.have_wall_on_west()],
+                    [(self.direction.value - 1.5)/1.5],
                     [self.distance_to_north_south_wall()],
                     [self.distance_to_west_east_wall()],
                     [self.have_snake_on_north()],

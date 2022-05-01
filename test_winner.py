@@ -5,7 +5,14 @@ from json import JSONEncoder
 
 FILENAME = "winner.json"
 
-if __name__ == '__main__':
+def test2():
+    input = [[-1.0], [0.0], [0.5], [-1.0], [-1.0], [-1.0], [-1.0], [0.5], [-0.25]]
+    for i in range(50):
+        member = Dna(i)
+        print(member.next_move_from_input(input))
+        
+           
+def test1():
     member = Dna(1)
 
     with open(FILENAME, 'r', encoding='utf-8') as f:
@@ -13,13 +20,14 @@ if __name__ == '__main__':
 
     data = jsonpickle.decode(json_data)
 
-    member.model.sizes = data['sizes']
+    member.model.nn_architecture = data['nn_architecture']
     member.model.biases = data['biases']
     member.model.weights = data['weights']
-    member.model.num_layers = len(member.model.sizes)
+    #member.model.num_layers = len(member.model.sizes)
 
     member.test_dna_to_update_fitness(print_test=True)
     
-    
+if __name__ == '__main__':
+    test1()
 
         
