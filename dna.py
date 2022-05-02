@@ -6,15 +6,7 @@ from enum import Enum
 from snakegame import SnakeGame
 from nn2 import Network
 
-INPUT_SIZE = 13
-OUTPUT_SIZE = 3
-HIDDEN_LAYERS = 1
-NEURONS_PER_LAYER = 6
-
-class Output(Enum):
-    LEFT = 0
-    STRAIGHT = 1
-    RIGHT = 2
+from settings import *
 
 class Dna:
     #creates a random DNA
@@ -24,8 +16,8 @@ class Dna:
         self.fitness = 0
         
         nn_architecture = [
-            {"input_dim": INPUT_SIZE, "output_dim": 18, "activation": "relu"},
-            {"input_dim": 18, "output_dim": OUTPUT_SIZE, "activation": "sigmoid"},
+            {"input_dim": INPUT_SIZE, "output_dim": NEURONS_HIDDEN_LAYERS, "activation": "relu"},
+            {"input_dim": NEURONS_HIDDEN_LAYERS, "output_dim": OUTPUT_SIZE, "activation": "sigmoid"},
         ]
         self.model = Network(nn_architecture, empty)
         #print('D', end='', flush=True)
@@ -54,7 +46,7 @@ class Dna:
             if print_test:
                 print(f"fitness:{sg.get_fitness_score()}")  
                 sg.print_board()
-                sleep(0.6)  
+                sleep(0.1)  
         #calculate new fitness
         self.fitness = sg.get_fitness_score()
         if print_test:

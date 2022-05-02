@@ -1,3 +1,4 @@
+import imp
 import logging
 import sys
 import time
@@ -8,25 +9,13 @@ from population import Population
 
 from dna import Dna
 
-POPULATION_SIZE = 2000#2000
-GENERATIONS = 100
-ITERATIONS_PER_GENERATION = 4
-#KEEP_X_PERC_BEST = 100 #20
-RANDOM_MEMBERS_TO_ADD = 0
-MUTATION_RATE = 70
-TOP_PARENTS_SELECTED = 200 #100
-ADD_PARENTS = False
-CROSSOVERS_TO_ADD = 2000
-#CROSS_OVER = POPULATION_SIZE*KEEP_X_PERC_BEST-RANDOM_MEMBERS_TO_ADD
-
+from settings import *
+#time 1.3 - 17.7 - 40.8 - 45.45=> 1cpu
+#time 1.2 - 1.6 - 4.26 - 4.6 => 10 cpu
 def main():
-    #stats = {}
-    #stats['config'] = {}
-    #stats['config']['POPULATION_SIZE'] = POPULATION_SIZE
-    #stats['config']['GENERATIONS'] = GENERATIONS
-    #stats['config']['KEEP_X_PERC_BEST'] = KEEP_X_PERC_BEST
-    #stats['config']['RANDOM_MEMBERS_TO_ADD'] = RANDOM_MEMBERS_TO_ADD
-    #stats['results'] = {}
+    stats = {}
+    stats['results'] = {}
+    stats['config'] = {'POPULATION_SIZE': POPULATION_SIZE, 'GENERATIONS': GENERATIONS, 'RANDOM_MEMBERS_TO_ADD': RANDOM_MEMBERS_TO_ADD, 'ITERATIONS_PER_GENERATION':ITERATIONS_PER_GENERATION, 'MUTATION_RATE':MUTATION_RATE, 'TOP_PARENTS_SELECTED':TOP_PARENTS_SELECTED, 'ADD_PARENTS':ADD_PARENTS, 'CROSSOVERS_TO_ADD':CROSSOVERS_TO_ADD}
     config_new_logger()
 
     logging.info(f"STARTING NEW RUN")
@@ -38,8 +27,13 @@ def main():
         print(f"Population size: {len(population.members)}")
         
         print(f"Updating fitness for Generation #{gen}")
+        start = time.time()
         population.update_fitness(iterations=ITERATIONS_PER_GENERATION)
-        print(f"Updating fitness for Generation #{gen} - completed")
+        end = time.time()
+        logging.debug(f"Time elapsed:{end - start}")
+        print(f"Updating fitness for Generation #{gen} - completed in {end - start}")
+
+        population.save_best_to_file()
 
         results = [member.fitness for member in population.members]
         top_results = sorted(results)[-10:]
@@ -49,11 +43,7 @@ def main():
         
         parents_dna: list[Dna]
         parents_dna = population.get_parents_dna(TOP_PARENTS_SELECTED) #list of dns
-        
-        results = [parent.fitness for parent in parents_dna]
-        top_results = sorted(results)[-10:]
-        print(f"Results for Parents in Gerenration #{gen}:{top_results}")
-
+    
         if ADD_PARENTS:
             print(f"Adding parents for Generation #{gen}")
             new_population.add_members_from_dna(parents_dna)
@@ -75,39 +65,13 @@ def main():
         print(f"Adding crossovers for Generation #{gen} - completed")
         #   for each crossovers add both or only ADD_CROSSOVER_WINNER
         # fill with RANDOM_MEMBERS_TO_ADD
-        print(f"Filling some random members for Generation #{gen}")
-        population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
-        print(f"Filling some random members for Generation #{gen} - completed")
+        if RANDOM_MEMBERS_TO_ADD > 0:
+            print(f"Filling some random members for Generation #{gen}")
+            population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
+            print(f"Filling some random members for Generation #{gen} - completed")
 
-        #Selection
-        #print(f"population complete: {len(population.members)} members")
-        #print(f"Killing loosers for Generation #{gen}")
-        #population.kill_under_performants(100-KEEP_X_PERC_BEST)
-        #print(f"population alive: {len(population.members)} sourvivours")
-
-        #results = [member.fitness for member in population.members]
-        #logging.info(results)
-        #print(f"{gen} {min(results)} {max(results)} {np.mean(results)} {np.std(results)}")
-
-        #print(f"{[member.name for member in population.members]}")
-        
-        #crossover and mutation
-        #parents_ids = population.get_best_members_ids(TOP_PARENTS_SELECTED)
-        #print(f"PARENTS (TOP#{TOP_PARENTS_SELECTED})")
-        #for i,member in enumerate(population.members):
-        #    if member.id in parents_ids:
-        #        print(f"idx[{i}] id[{member.id}] name[{member.name}] fitness[{member.fitness}]")
-        #print(f"THE REST")
-        #for i,member in enumerate(population.members):
-        #    if member.id not in parents_ids:
-        #        print(f"idx[{i}] id[{member.id}] name[{member.name}] fitness[{member.fitness}]")
-        #print(f"Crossover and Mutation for Generation #{gen}")
-        #population.crossover_and_mutate(parents_ids, POPULATION_SIZE-RANDOM_MEMBERS_TO_ADD-1, MUTATION_RATE)
-        
-        #print(f"Filling some random members for Generation #{gen}")
-        #population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
         population=new_population
-        #population.save_best_to_file()
+        
         
     #logging.info(stats)
     #for gen in stats['results']: 

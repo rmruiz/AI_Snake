@@ -10,21 +10,17 @@ def sigmoid(z):
 
 class Network():
     def __init__(self, nn_architecture, empty=False):
-        #np.random.seed(seed)
         self.nn_architecture = nn_architecture
-        #self.number_of_layers = len(nn_architecture)
         self.weights = []
         self.biases = []
 
         if not empty:
             for layer in nn_architecture:
-                #print(f"layer={layer}")
                 layer_input_size = layer["input_dim"]
                 layer_output_size = layer["output_dim"]
-                #print(f"layer_input_size={layer_input_size}")
-                #print(f"layer_output_size={layer_output_size}")
                 self.weights.append(np.random.randn(layer_output_size,layer_input_size))
                 self.biases.append(np.random.randn(layer_output_size,1))
+                #TODO:test uniform distrib
                 #self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
                 #    size=(layer_output_size,layer_input_size)))
                 #self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
@@ -55,7 +51,6 @@ if __name__ == '__main__':
         {"input_dim": 4, "output_dim": 6, "activation": "relu"},
         {"input_dim": 6, "output_dim": 3, "activation": "sigmoid"},
     ]
-
     my_network = Network(nn_architecture)
 
     result = my_network.feedforward([[0.3], [0.4], [-0.2], [-1]])

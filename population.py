@@ -11,12 +11,7 @@ from snakegame import SnakeGame
 from json import JSONEncoder
 import copy
 
-import multiprocessing
 from joblib import Parallel, delayed
-
-#from multiprocessing.pool import ThreadPool
-
-#random.seed(0)
 
 class Population:
     def __init__(self, size):
@@ -75,7 +70,7 @@ class Population:
 
     def update_fitness(self, iterations=1):
         #num_cores = multiprocessing.cpu_count()
-        num_cores = 1 # use all of them
+        num_cores = -1 # use all of them
         start = time.time()
         results = Parallel(n_jobs=num_cores) ( delayed( new_iterate_to_update_fitness ) ( member, iterations ) for member in self.members )
 
@@ -152,38 +147,6 @@ class Population:
         print("We shouldn't be here")
         raise
         #return delete_me
-
-    def crossover_and_mutate(self, parents_ids, quantity, mutation_rate):
-        if len(parents_ids) == 0:
-            raise "generation quality is too poor"
-        while len(self.members) <= quantity:
-            #Yes, father and mother could be the same
-            father_id = self.select_proportional_by_fitness_parent(parents_ids)
-            mother_id = self.select_proportional_by_fitness_parent(parents_ids)
-            
-            father_idx = mother_idx = -1
-            for index, member in enumerate(self.members):
-                if member.id == father_id:
-                    father_idx = index
-                if member.id == mother_id:
-                    mother_idx = index
-                if father_idx != -1 and mother_idx != -1:
-                    break
-            
-            father_weight = self.members[father_idx].model.weights
-            mother_weight = self.members[mother_idx].model.weights
-            father_biases = self.members[father_idx].model.biases
-            mother_biases = self.members[mother_idx].model.biases
-
-            mutate = False
-            if randint(1,100) <= mutation_rate:
-                mutate = True
-
-            son_weight = mix(father_weight, mother_weight, mutate)
-            son_biases = mix(father_biases, mother_biases, mutate)
-            
-            #self.add_member_from_dna(son_weight, son_biases, self.members[father_idx].name, self.members[mother_idx].name, mutate)
-            self.add_member_from_dna(son_weight, son_biases)
 
 def new_iterate_to_update_fitness(member, iterations=1) -> int:
     results = []
@@ -277,40 +240,6 @@ def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:st
         #print(f"mutate:{mutate} [{i},{j},{k}]")        
 
     return new_dna
-
-def mix(A,B, mix_type="all", mix_weights_or_biases="both", mutate=False):
-
-    C = []
-    for i, WoB in enumerate(A):
-        new_WoB = []
-        for j, row in enumerate(WoB):
-            new_row = []
-            for k in range(len(row)):
-                if randint(1,2) == 1:
-                    new_value = A[i][j][k]
-                else:
-                    new_value = B[i][j][k]
-                new_row.append(new_value)
-            new_WoB.append(new_row)
-        C.append(np.array(new_WoB))
-
-    if mutate:
-        i = randint(0,len(C)-1)
-        WoB = C[i]
-        j = randint(0,len(WoB)-1)
-        row = WoB[j]
-        k = randint(0,len(row)-1)
-        C[i][j][k] = (random()-0.5)*2
-
-    return C
-
-def print_model_details(model):
-    for layer in model.layers:
-        print(layer.name)
-        print("Weights")
-        print("Shape: ",layer.get_weights()[0].shape,'\n',layer.get_weights()[0])
-        print("Bias")
-        print("Shape: ",layer.get_weights()[1].shape,'\n',layer.get_weights()[1],'\n')
 
 def new_select_proportional_by_fitness(parents_dna: list[Dna]):
     total_fitness = 0
