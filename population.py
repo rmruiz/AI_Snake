@@ -1,17 +1,15 @@
-from ast import Str
 import logging
-from random import randint, random
-from dna import Dna
-import numpy as np
 import time
 import logging
 import json
 import jsonpickle
-from snakegame import SnakeGame
-from json import JSONEncoder
 import copy
-
+from random import randint, random
 from joblib import Parallel, delayed
+
+from dna import Dna
+from snakegame import SnakeGame
+
 
 class Population:
     def __init__(self, size):
@@ -24,12 +22,8 @@ class Population:
         new_dnas = []
         for _ in range(quantity):
             father_dna = new_select_proportional_by_fitness(parents_dna)
-            #print(f"father_dna:{father_dna.model.weights}")
             mother_dna = new_select_proportional_by_fitness(parents_dna)
-            #print(f"mother_dna:{mother_dna.model.weights}")
-
             new_dna = mix_dna(father_dna, mother_dna, mix_type=crossover_type, mix_weights_or_biases=crossover_w_or_b, mutate=mutate)
-            #print(f"new_dna:{new_dna.model.weights}")
             new_dnas.append(new_dna)
         self.add_members_from_dna(new_dnas)
 
@@ -44,7 +38,6 @@ class Population:
         return sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
 
     def save_best_to_file(self):
-        #filename = time.strftime("winner-%Y%m%d-%H%M%S.json")
         filename = time.strftime("winner-%Y%m%d.json")
         best = -1
         best_fitness = 0
@@ -54,11 +47,9 @@ class Population:
                 best = idx
 
         print("")
-        #print(f"Best so far: id[{self.members[best].id}] name[{self.members[best].name}] fitness[{self.members[best].fitness}]")
         print(f"Best so far: id[{self.members[best].id}] fitness[{self.members[best].fitness}]")
 
         data = {}
-        #data['sizes'] = self.members[best].model.sizes
         data['nn_architecture'] = self.members[best].model.nn_architecture
         data['biases'] = self.members[best].model.biases
         data['weights'] = self.members[best].model.weights
@@ -69,7 +60,6 @@ class Population:
             json.dump(json_data, f, ensure_ascii=False, indent=4)
 
     def update_fitness(self, iterations=1):
-        #num_cores = multiprocessing.cpu_count()
         num_cores = -1 # use all of them
         start = time.time()
         results = Parallel(n_jobs=num_cores) ( delayed( new_iterate_to_update_fitness ) ( member, iterations ) for member in self.members )
@@ -81,7 +71,6 @@ class Population:
 
     def add_random_member(self):
         self.members.append(Dna(self.next_id))
-        #print(f"Adding member id:{self.next_id}")
         self.next_id = self.next_id + 1
 
     def add_member_from_dna(self, weights, biases, father_name=None, mother_name=None, mutate=None):
@@ -101,52 +90,12 @@ class Population:
     def fill_with_random_members(self, quantity):
         self.members = self.members + [Dna(i) for i in range(self.next_id, self.next_id + quantity)]
 
-
-    def kill_under_performants(self, percentage_to_kill):
-        #results = sorted([member.fitness for member in self.members], reverse=False)
-        #min_accepted_result = results[int(percentage_to_kill/100*len(results))]
-
-        kill_upto_index = int(len(self.members)*percentage_to_kill/100.0)
-        #print(f"Killing in the name of: {kill_upto_index}/{len(self.members)}")
-        self.members = [member for idx,member in enumerate(self.members) if idx >= kill_upto_index]
-
     def get_best_members_ids(self, quantity):
         #print([f"{member.id}/{member.fitness}" for member in self.members])
         best_members = sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
         best_members_ids = [member.id for member in best_members]
         #print(f"the best: {best_members_ids}")
         return best_members_ids
-
-    def select_random_parent(parents_ids):
-        return parents_ids[randint(0,len(parents_ids)-1)]
-
-    def select_proportional_by_fitness_parent(self, parents_ids):
-        #print("######")
-        #print(f"parents_ids:{parents_ids}")
-        parents_dict = {}
-        total_fitness = 0
-        for member in self.members:
-            if member.id in parents_ids:
-                parents_dict[member.id] = member.fitness
-                total_fitness = total_fitness + member.fitness
-
-        #print(f"parents_dict:{parents_dict}")
-        #print(f"total_fitness:{total_fitness}")
-
-        random_fitness_wheel = randint(1,total_fitness-1)
-        #print(f"random_fitness_wheel:{random_fitness_wheel}")
-        delete_me = 0
-        for selected_parent_id in parents_dict:
-            random_fitness_wheel = random_fitness_wheel - parents_dict[selected_parent_id]
-            #print(f"random_fitness_wheel:{random_fitness_wheel}")
-            if random_fitness_wheel <= 0:
-                #print(f"selected_parent_id:{selected_parent_id}")
-                return selected_parent_id
-            delete_me = selected_parent_id
-        #TODO: delete this:
-        print("We shouldn't be here")
-        raise
-        #return delete_me
 
 def new_iterate_to_update_fitness(member, iterations=1) -> int:
     results = []
