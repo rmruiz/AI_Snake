@@ -4,7 +4,7 @@ from time import sleep
 from enum import Enum
 
 from snakegame import SnakeGame
-from nn2 import Network
+from nn import Network
 
 from settings import *
 

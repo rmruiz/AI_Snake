@@ -1,10 +1,5 @@
-exit()
+#https://towardsdatascience.com/lets-code-a-neural-network-in-plain-numpy-ae7e74410795
 import numpy as np
-#import random
-#import pickle
-#import gzip
-
-#https://gist.github.com/roycoding/7bfcd821ae5be40804979973be149953
 
 def relu(z):
     return np.maximum(0,z)
@@ -13,65 +8,51 @@ def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
 
-def sigmoid_prime(z):
-    """Derivative of the sigmoid function."""
-    return sigmoid(z)*(1-sigmoid(z))
+class Network():
+    def __init__(self, nn_architecture, empty=False):
+        self.nn_architecture = nn_architecture
+        self.weights = []
+        self.biases = []
 
-class Network(object):
-
-    def __init__(self, sizes):
-        """The list ``sizes`` contains the number of neurons in the
-        respective layers of the network.  For example, if the list
-        was [2, 3, 1] then it would be a three-layer network, with the
-        first layer containing 2 neurons, the second layer 3 neurons,
-        and the third layer 1 neuron.  The biases and weights for the
-        network are initialized randomly, using a Gaussian
-        distribution with mean 0, and variance 1.  Note that the first
-        layer is assumed to be an input layer, and by convention we
-        won't set any biases for those neurons, since biases are only
-        ever used in computing the outputs from later layers."""
-        
-        self.num_layers = len(sizes)
-        self.sizes = sizes
-
-        self.biases = [np.random.randn(y, 1) for y in sizes[1:]]
-        self.weights = [np.random.randn(y, x) for x, y in zip(sizes[:-1], sizes[1:])]
-        #self.biases = [np.random.uniform(low=-1.0, high=1.0, size=(y,1)) for y in sizes[1:]]
-        #self.weights = [np.random.uniform(low=-1.0, high=1.0, size=(y,x)) for x, y in zip(sizes[:-1], sizes[1:])]
-
-    def feedforward(self, a):
-        """Return the output of the network if ``a`` is input."""
-        
-        for b, w in zip(self.biases, self.weights):
-            #print(f"size w: {np.array(w).shape}")
-            #print(f"W:{w}")
+        if not empty:
+            for layer in nn_architecture:
+                layer_input_size = layer["input_dim"]
+                layer_output_size = layer["output_dim"]
+                self.weights.append(np.random.randn(layer_output_size,layer_input_size))
+                self.biases.append(np.random.randn(layer_output_size,1))
+                #TODO:test uniform distrib
+                #self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
+                #    size=(layer_output_size,layer_input_size)))
+                #self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
+                #    size=(layer_output_size,1)))
             
-            #print(f"lenght a: {np.array(a).shape}")
-            #print(f"A:{a}")
+    def feedforward(self, A):
+        for idx, layer in enumerate(self.nn_architecture):
+            activ_function = layer["activation"]
+            W = self.weights[idx]
+            b = self.biases[idx]
+            A = single_layer_forward_propagation(A, W, b, activ_function)
+        return A
+
+def single_layer_forward_propagation(A, W, b, activation="relu"):
+    
+    if activation == "relu":
+        activation_func = relu
+    elif activation == "sigmoid":
+        activation_func = sigmoid
+    else:
+        raise Exception('Non-supported activation function')
         
-            #print(f"lenght b: {np.array(b).shape}")
-            #print(f"B:{b}")
-            #print("")
+    return activation_func(np.dot(W, A) + b)
 
-            #print(f"lenght wa: {np.array(np.dot(w, a)).shape}")
-            #print(f"lenght wa+b: {np.array(np.dot(w, a)+b).shape}")
-
-            a = sigmoid(np.dot(w, a)+b)
-            #print(a)
-        #print(f"lenght a: {np.array(a).shape}")
-        return a
 
 if __name__ == '__main__':
-    #my_network = Network([4,3,6,1])
-    my_network = Network([4,6,3])
+    nn_architecture = [
+        {"input_dim": 4, "output_dim": 6, "activation": "relu"},
+        {"input_dim": 6, "output_dim": 3, "activation": "sigmoid"},
+    ]
+    my_network = Network(nn_architecture)
 
-    a = np.random.random(size=(4,1))
-    a = np.random.uniform(low=-1.0, high=1.0, size=(4,1))
-
-    result = my_network.feedforward(a)
+    result = my_network.feedforward([[0.3], [0.4], [-0.2], [-1]])
 
     print(f"result={result}")
-
-    #print(f"weights={my_network.weights}")
-
-    #print(f"biases={my_network.biases}")

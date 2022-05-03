@@ -1,9 +1,8 @@
-import logging
-import time
-import logging
-import json
-import jsonpickle
-import copy
+from logging import debug
+from time import time, strftime
+from json import dump
+from jsonpickle import encode
+from copy import deepcopy
 from random import randint, random
 from joblib import Parallel, delayed
 
@@ -38,7 +37,7 @@ class Population:
         return sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
 
     def save_best_to_file(self):
-        filename = time.strftime("winner-%Y%m%d.json")
+        filename = strftime("winner-%Y%m%d.json")
         best = -1
         best_fitness = 0
         for idx, member in enumerate(self.members):
@@ -54,20 +53,20 @@ class Population:
         data['biases'] = self.members[best].model.biases
         data['weights'] = self.members[best].model.weights
 
-        json_data = jsonpickle.encode(data)
+        json_data = encode(data)
 
         with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)
+            dump(json_data, f, ensure_ascii=False, indent=4)
 
     def update_fitness(self, iterations=1):
         num_cores = -1 # use all of them
-        start = time.time()
+        start = time()
         results = Parallel(n_jobs=num_cores) ( delayed( new_iterate_to_update_fitness ) ( member, iterations ) for member in self.members )
 
         for i, member in enumerate(self.members):
             member.fitness = results[i]
-        end = time.time()
-        logging.debug(f"Time elapsed:{end - start}")
+        end = time()
+        debug(f"Time elapsed:{end - start}")
 
     def add_random_member(self):
         self.members.append(Dna(self.next_id))
@@ -90,12 +89,6 @@ class Population:
     def fill_with_random_members(self, quantity):
         self.members = self.members + [Dna(i) for i in range(self.next_id, self.next_id + quantity)]
 
-    def get_best_members_ids(self, quantity):
-        #print([f"{member.id}/{member.fitness}" for member in self.members])
-        best_members = sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
-        best_members_ids = [member.id for member in best_members]
-        #print(f"the best: {best_members_ids}")
-        return best_members_ids
 
 def new_iterate_to_update_fitness(member, iterations=1) -> int:
     results = []
@@ -129,8 +122,8 @@ def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:st
     j=0
     k=0
     new_dna:Dna = Dna(0,empty=True)
-    new_dna.model.weights = copy.deepcopy(dnaA.model.weights)
-    new_dna.model.biases = copy.deepcopy(dnaA.model.biases)
+    new_dna.model.weights = deepcopy(dnaA.model.weights)
+    new_dna.model.biases = deepcopy(dnaA.model.biases)
 
     change_weights:bool = (mix_weights_or_biases == "random" and randint(0,1) == 0) or mix_weights_or_biases == "weights" or mix_weights_or_biases == "both"
     change_biases:bool = (mix_weights_or_biases == "random" and randint(0,1) == 1) or mix_weights_or_biases == "biases" or mix_weights_or_biases == "both"
