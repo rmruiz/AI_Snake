@@ -16,12 +16,11 @@ class Population:
         self.members = [Dna(i) for i in range(size)]
 
     def add_crossover_members_from_dna(self, parents_dna: list[Dna], quantity, mutation_rate:int, crossover_type, crossover_w_or_b):
-
         mutate: bool = mutation_rate > randint(1,100)
         new_dnas = []
         for _ in range(quantity):
-            father_dna = new_select_proportional_by_fitness(parents_dna)
-            mother_dna = new_select_proportional_by_fitness(parents_dna)
+            father_dna = select_proportional_by_fitness(parents_dna)
+            mother_dna = select_proportional_by_fitness(parents_dna)
             new_dna = mix_dna(father_dna, mother_dna, mix_type=crossover_type, mix_weights_or_biases=crossover_w_or_b, mutate=mutate)
             new_dnas.append(new_dna)
         self.add_members_from_dna(new_dnas)
@@ -74,11 +73,6 @@ class Population:
 
     def add_member_from_dna(self, weights, biases, father_name=None, mother_name=None, mutate=None):
         member = Dna(self.next_id)
-        #member.name = f"{father_name}.{mother_name}"
-        #if mutate:
-        #    member.name = f"M({member.name})"
-        #print_model_details(member.model)
-        #print(f"param dna: {dna}")
         member.model.weights = weights
         member.model.biases = biases
 
@@ -93,11 +87,11 @@ class Population:
 def new_iterate_to_update_fitness(member, iterations=1) -> int:
     results = []
     for i in range(iterations):
-        result = new_test_dna_to_update_fitness(member)
+        result = test_dna_to_update_fitness(member)
         results.append(result)
     return int(sum(results)/len(results))
 
-def new_test_dna_to_update_fitness(member:Dna) -> int:
+def test_dna_to_update_fitness(member:Dna) -> int:
     sg = SnakeGame()
     while(sg.alive):
         input = sg.get_current_input()
@@ -183,7 +177,7 @@ def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:st
 
     return new_dna
 
-def new_select_proportional_by_fitness(parents_dna: list[Dna]):
+def select_proportional_by_fitness(parents_dna: list[Dna]):
     total_fitness = 0
     for dna in parents_dna:
         total_fitness = total_fitness + dna.fitness
