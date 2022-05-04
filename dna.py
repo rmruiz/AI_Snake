@@ -1,24 +1,21 @@
 import numpy as np
-
 from time import sleep
 
 from snakegame import SnakeGame
 from nn import Network
-
 from settings import *
 
+#TODO:change class name to snake, model to brain
 class Dna:
     #creates a random DNA
-    def __init__(self, id, empty=False):
-        self.id = id
-        self.model = None
+    def __init__(self, weights=None, biases=None):
         self.fitness = 0
         
         nn_architecture = [
             {"input_dim": INPUT_SIZE, "output_dim": NEURONS_HIDDEN_LAYERS, "activation": "relu"},
             {"input_dim": NEURONS_HIDDEN_LAYERS, "output_dim": OUTPUT_SIZE, "activation": "sigmoid"},
         ]
-        self.model = Network(nn_architecture, empty)
+        self.model = Network(nn_architecture, weights, biases)
 
     def iterate_to_update_fitness(self, iterations=1):
         results = []

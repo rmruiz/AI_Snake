@@ -9,22 +9,31 @@ def sigmoid(z):
     return 1.0/(1.0+np.exp(-z))
 
 class Network():
-    def __init__(self, nn_architecture, empty=False):
+    def __init__(self, nn_architecture, weights=None, biases=None):
         self.nn_architecture = nn_architecture
-        self.weights = []
-        self.biases = []
-
-        if not empty:
+   
+        if weights is None:
+            self.weights = []
             for layer in nn_architecture:
                 layer_input_size = layer["input_dim"]
                 layer_output_size = layer["output_dim"]
                 self.weights.append(np.random.randn(layer_output_size,layer_input_size))
-                self.biases.append(np.random.randn(layer_output_size,1))
                 #TODO:test uniform distrib
                 #self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
                 #    size=(layer_output_size,layer_input_size)))
+        else:
+            self.weights = weights
+                
+        if biases is None:
+            self.biases = []
+            for layer in nn_architecture:
+                layer_output_size = layer["output_dim"]
+                self.biases.append(np.random.randn(layer_output_size,1))
+                #TODO:test uniform distrib
                 #self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
                 #    size=(layer_output_size,1)))
+        else:
+            self.biases = biases
             
     def feedforward(self, A):
         for idx, layer in enumerate(self.nn_architecture):

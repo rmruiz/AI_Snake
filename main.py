@@ -1,17 +1,13 @@
-import imp
 import logging
 import sys
 import time
-from unittest import result
-import numpy as np
 
 from population import Population
-
 from dna import Dna
-
 from settings import *
 #time 1.3 - 17.7 - 40.8 - 45.45=> 1cpu
 #time 1.2 - 1.6 - 4.26 - 4.6 => 10 cpu
+
 def main():
     stats = {}
     stats['results'] = {}
@@ -41,12 +37,15 @@ def main():
         
         new_population = Population(0)
         
+        #TODO: change Dna name class to Member
         parents_dna: list[Dna]
-        parents_dna = population.get_parents_dna(TOP_PARENTS_SELECTED) #list of dns
+        parents_dna = population.get_best_members(TOP_PARENTS_SELECTED) #list of dna's
     
         if ADD_PARENTS:
             print(f"Adding parents for Generation #{gen}")
             new_population.add_members_from_dna(parents_dna)
+            #TODO: is this the same? remove add_members_from_dna method
+            #population.members = parents_dna
             print(f"Adding parents for Generation #{gen} - completed")
         
         #add CROSSOVERS_TO_ADD crossing 1 weight or 1 biases

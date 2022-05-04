@@ -1,25 +1,6 @@
-from random import randint, random
-from enum import Enum
+from random import randint
 
-BOARD_SIZE = 18
-MAX_STEPS_WITHOUT_FOOD = 500 #5 * BOARD_SIZE * BOARD_SIZE
-
-class BoardCell(Enum):
-    EMPTY = 0
-    WALL = 1
-    SNAKE = 2
-    FRUIT = 3
-
-class Direction(Enum):
-    NORTH = 0
-    EAST = 1
-    SOUTH = 2
-    WEST = 3
-
-class Output(Enum):
-    LEFT = 0
-    STRAIGHT = 1
-    RIGHT = 2
+from settings import *
 
 class SnakeGame:
     def __init__(self):
@@ -63,9 +44,19 @@ class SnakeGame:
                 print(cell, end='')
             print('')
 
-    #def print_board(self):
-    #    board = self.build_board()
-    #    print(panda.DataFrame(board)) 
+    #1 touching north, -1 touching south, 0 in the middle
+    def distance_to_north_south_wall(self):
+        x=self.get_snake_head_pos()[0]
+        m=(-2.0)/(BOARD_SIZE-1.0)
+        b=1-m
+        y=m*x+b
+        return y
+    def distance_to_west_east_wall(self):
+        x=self.get_snake_head_pos()[1]
+        m=(-2.0)/(BOARD_SIZE-1.0)
+        b=1-m
+        y=m*x+b
+        return y 
 
     #TODO: return how far snake is on each direction
     def have_snake_on_north(self):
@@ -84,20 +75,6 @@ class SnakeGame:
         if east(self.get_snake_head_pos()) in self.snake:
             return 1.0
         return -1.0
-
-    #1 touching north, -1 touching south, 0 in the middle
-    def distance_to_north_south_wall(self):
-        x=self.get_snake_head_pos()[0]
-        m=(-2.0)/(BOARD_SIZE-1.0)
-        b=1-m
-        y=m*x+b
-        return y
-    def distance_to_west_east_wall(self):
-        x=self.get_snake_head_pos()[1]
-        m=(-2.0)/(BOARD_SIZE-1.0)
-        b=1-m
-        y=m*x+b
-        return y
 
     def have_wall_on_north(self):
         if is_wall(north(self.get_snake_head_pos())):
@@ -205,7 +182,7 @@ class SnakeGame:
     
     def get_fitness_score(self):
         #return self.total_steps*self.apples_eaten**2 # + self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
-        #return int(10000/self.total_steps)*self.apples_eaten**2
+        #return int(10000/(self.total_steps+1)*self.apples_eaten**2)
         return self.total_steps*((self.apples_eaten+1)**2)
 
     def get_current_input(self):

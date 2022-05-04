@@ -9,11 +9,9 @@ from joblib import Parallel, delayed
 from dna import Dna
 from snakegame import SnakeGame
 
-
 class Population:
     def __init__(self, size):
-        self.next_id = size
-        self.members = [Dna(i) for i in range(size)]
+        self.members = [Dna() for _ in range(size)]
 
     def add_crossover_members_from_dna(self, parents_dna: list[Dna], quantity, mutation_rate:int, crossover_type, crossover_w_or_b):
         mutate: bool = mutation_rate > randint(1,100)
@@ -26,13 +24,23 @@ class Population:
         self.add_members_from_dna(new_dnas)
 
     def add_members_from_dna(self, list_of_dna: list[Dna]) -> None:
+        #TODO: reference ? needs deepcopy?
         for dna in list_of_dna:
-            new_member = Dna(self.next_id, empty=True)
-            self.next_id = self.next_id + 1
+            new_member = Dna()
             new_member.model = dna.model
             self.members.append(new_member)
 
-    def get_parents_dna(self, quantity:int) -> list[Dna]:
+    def add_member_from_dna(self, weights, biases):
+        #TODO: reference ? needs deepcopy?
+        member = Dna()
+        member.model.weights = weights
+        member.model.biases = biases
+        self.members.append(member)
+
+    def fill_with_random_members(self, quantity):
+        self.members = self.members + [Dna() for _ in range(quantity)]
+
+    def get_best_members(self, quantity:int) -> list[Dna]:
         return sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
 
     def save_best_to_file(self):
@@ -44,8 +52,7 @@ class Population:
                 best_fitness = member.fitness
                 best = idx
 
-        print("")
-        print(f"Best so far: id[{self.members[best].id}] fitness[{self.members[best].fitness}]")
+        print(f"Best so far: fitness[{self.members[best].fitness}]")
 
         data = {}
         data['nn_architecture'] = self.members[best].model.nn_architecture
@@ -60,31 +67,14 @@ class Population:
     def update_fitness(self, iterations=1):
         num_cores = -1 # use all of them
         start = time()
-        results = Parallel(n_jobs=num_cores) ( delayed( new_iterate_to_update_fitness ) ( member, iterations ) for member in self.members )
+        results = Parallel(n_jobs=num_cores) ( delayed( iterate_to_update_fitness ) ( member, iterations ) for member in self.members )
 
         for i, member in enumerate(self.members):
             member.fitness = results[i]
         end = time()
         debug(f"Time elapsed:{end - start}")
 
-    def add_random_member(self):
-        self.members.append(Dna(self.next_id))
-        self.next_id = self.next_id + 1
-
-    def add_member_from_dna(self, weights, biases, father_name=None, mother_name=None, mutate=None):
-        member = Dna(self.next_id)
-        member.model.weights = weights
-        member.model.biases = biases
-
-        self.members.append(member)
-        #print(f"Adding member id:{self.next_id}")
-        self.next_id = self.next_id + 1
-
-    def fill_with_random_members(self, quantity):
-        self.members = self.members + [Dna(i) for i in range(self.next_id, self.next_id + quantity)]
-
-
-def new_iterate_to_update_fitness(member, iterations=1) -> int:
+def iterate_to_update_fitness(member, iterations=1) -> int:
     results = []
     for i in range(iterations):
         result = test_dna_to_update_fitness(member)
@@ -97,7 +87,6 @@ def test_dna_to_update_fitness(member:Dna) -> int:
         input = sg.get_current_input()
         next_move = member.next_move_from_input(input)
         sg.move_snake(next_move)
-    #print(".",end='',flush=True)
     return sg.get_fitness_score()
 
 def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:str="random", mutate:bool=False):
@@ -115,9 +104,8 @@ def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:st
     i=0
     j=0
     k=0
-    new_dna:Dna = Dna(0,empty=True)
-    new_dna.model.weights = deepcopy(dnaA.model.weights)
-    new_dna.model.biases = deepcopy(dnaA.model.biases)
+    
+    new_dna:Dna = Dna(weights=deepcopy(dnaA.model.weights), biases=deepcopy(dnaA.model.biases))
 
     change_weights:bool = (mix_weights_or_biases == "random" and randint(0,1) == 0) or mix_weights_or_biases == "weights" or mix_weights_or_biases == "both"
     change_biases:bool = (mix_weights_or_biases == "random" and randint(0,1) == 1) or mix_weights_or_biases == "biases" or mix_weights_or_biases == "both"
