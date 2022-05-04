@@ -1,17 +1,14 @@
 import logging
 import sys
 import time
+from os import mkdir
 
 from population import Population
 from dna import Dna
 from settings import *
-#time 1.3 - 17.7 - 40.8 - 45.45=> 1cpu
-#time 1.2 - 1.6 - 4.26 - 4.6 => 10 cpu
 
 def main():
-    stats = {}
-    stats['results'] = {}
-    stats['config'] = {'POPULATION_SIZE': POPULATION_SIZE, 'GENERATIONS': GENERATIONS, 'RANDOM_MEMBERS_TO_ADD': RANDOM_MEMBERS_TO_ADD, 'ITERATIONS_PER_GENERATION':ITERATIONS_PER_GENERATION, 'MUTATION_RATE':MUTATION_RATE, 'TOP_PARENTS_SELECTED':TOP_PARENTS_SELECTED, 'ADD_PARENTS':ADD_PARENTS, 'CROSSOVERS_TO_ADD':CROSSOVERS_TO_ADD}
+    stats = set_stats_globals()
     config_new_logger()
 
     logging.info(f"STARTING NEW RUN")
@@ -28,8 +25,11 @@ def main():
         end = time.time()
         logging.debug(f"Time elapsed:{end - start}")
         print(f"Updating fitness for Generation #{gen} - completed in {end - start}")
-
-        population.save_best_to_file()
+        
+        if 'run' not in stats:
+            stats['run'] = {}
+        stats['run']['gen'] = gen
+        population.save_best_to_file(data=stats)
 
         results = [member.fitness for member in population.members]
         top_results = sorted(results)[-10:]
@@ -78,13 +78,14 @@ def main():
 
     
 def config_new_logger():
+    global RUN_NAME
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s', 
                               '%m-%d-%Y %H:%M:%S')
     
-    filename = time.strftime("%Y%m%d-%H%M%S.log")
-    file_handler = logging.FileHandler("logs/"+filename, mode='w')
+    filename = time.strftime("run_details.log")
+    file_handler = logging.FileHandler(RUN_NAME+"/"+filename, mode='w')
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
 
@@ -96,9 +97,30 @@ def config_new_logger():
     logger.addHandler(stdout_handler)
 
 
+def set_stats_globals():
+
+    global RUN_NAME
+    RUN_NAME = time.strftime("%Y.%m.%d_%H.%M")
+
+    mkdir(RUN_NAME)
+
+    stats = {}
+    stats['results'] = {}
+    stats['config'] = {
+        'POPULATION_SIZE': POPULATION_SIZE, 
+        'GENERATIONS': GENERATIONS, 
+        'RANDOM_MEMBERS_TO_ADD': RANDOM_MEMBERS_TO_ADD, 
+        'ITERATIONS_PER_GENERATION':ITERATIONS_PER_GENERATION, 
+        'MUTATION_RATE':MUTATION_RATE, 
+        'TOP_PARENTS_SELECTED':TOP_PARENTS_SELECTED, 
+        'ADD_PARENTS':ADD_PARENTS, 
+        'CROSSOVERS_TO_ADD':CROSSOVERS_TO_ADD,
+        'NN_ARQ':NN_ARQ,
+        'BOARD_SIZE':BOARD_SIZE,
+        'MAX_STEPS_WITHOUT_FOOD':MAX_STEPS_WITHOUT_FOOD,
+        'RUN_NAME':RUN_NAME,
+        }
+    return stats
+    
 if __name__ == '__main__':
     main()
-
-
-    """
-    usar funcion max(lista, key=fuct) """

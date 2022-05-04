@@ -8,6 +8,7 @@ from joblib import Parallel, delayed
 
 from dna import Dna
 from snakegame import SnakeGame
+from settings import *
 
 class Population:
     def __init__(self, size):
@@ -43,21 +44,25 @@ class Population:
     def get_best_members(self, quantity:int) -> list[Dna]:
         return sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
 
-    def save_best_to_file(self):
-        filename = strftime("winner-%Y%m%d.json")
-        best = -1
+    def save_best_to_file(self, data):
+        
+        best_idx = -1
         best_fitness = 0
         for idx, member in enumerate(self.members):
             if member.fitness > best_fitness:
                 best_fitness = member.fitness
-                best = idx
+                best_idx = idx
 
-        print(f"Best so far: fitness[{self.members[best].fitness}]")
+        best_fitness = self.members[best_idx].fitness
+        print(f"Best so far: fitness[{best_fitness}]")
 
-        data = {}
-        data['nn_architecture'] = self.members[best].model.nn_architecture
-        data['biases'] = self.members[best].model.biases
-        data['weights'] = self.members[best].model.weights
+        dir_name = data['config']['RUN_NAME']
+        filename = dir_name + "/" + strftime(f"{best_fitness}-%Y%m%d.json")
+
+        data['NeuralNetwork'] = {}
+        data['NeuralNetwork']['nn_architecture'] = self.members[best_idx].model.nn_architecture
+        data['NeuralNetwork']['biases'] = self.members[best_idx].model.biases
+        data['NeuralNetwork']['weights'] = self.members[best_idx].model.weights
 
         json_data = encode(data)
 

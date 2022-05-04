@@ -7,10 +7,9 @@ FILENAME = "winner.json"
 
 def test2():
     input = [[-1.0], [0.0], [0.5], [-1.0], [-1.0], [-1.0], [-1.0], [0.5], [-0.25]]
-    for i in range(50):
-        member = Dna(i)
-        print(member.next_move_from_input(input))
-        
+    for _ in range(50):
+        member = Dna()
+        print(member.next_move_from_input(input))        
            
 def test1():
     member = Dna(1)

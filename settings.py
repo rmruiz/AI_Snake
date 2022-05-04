@@ -2,23 +2,28 @@ from enum import Enum
 
 ## Genetic Algorithm Config
 POPULATION_SIZE = 2000
-GENERATIONS = 100
-ITERATIONS_PER_GENERATION = 5
-RANDOM_MEMBERS_TO_ADD = 0
-MUTATION_RATE = 70
-TOP_PARENTS_SELECTED = 100
+GENERATIONS = 4
+ITERATIONS_PER_GENERATION = 10
+RANDOM_MEMBERS_TO_ADD = 5
+MUTATION_RATE = 80
+TOP_PARENTS_SELECTED = 200
 ADD_PARENTS = True
-CROSSOVERS_TO_ADD = 1000
+CROSSOVERS_TO_ADD = 1800
 
 ## Neural Network Config
-INPUT_SIZE = 13
+INPUT_SIZE = 17
 OUTPUT_SIZE = 3
-NEURONS_HIDDEN_LAYERS = 18
-NEURONS_PER_LAYER = 6
+NEURONS_PER_LAYER = 25
+NN_ARQ = [
+            {"input_dim": INPUT_SIZE, "output_dim": NEURONS_PER_LAYER, "activation": "relu"},
+            {"input_dim": NEURONS_PER_LAYER, "output_dim": OUTPUT_SIZE, "activation": "sigmoid"},
+        ]
 
 #  Game Config
 BOARD_SIZE = 18
-MAX_STEPS_WITHOUT_FOOD = 500 #int(BOARD_SIZE * BOARD_SIZE / 2) #5 * BOARD_SIZE * BOARD_SIZE
+MAX_STEPS_WITHOUT_FOOD = 400 #int(BOARD_SIZE * BOARD_SIZE / 2) #5 * BOARD_SIZE * BOARD_SIZE
+
+################ End Config #################
 
 class Output(Enum):
     LEFT = 0

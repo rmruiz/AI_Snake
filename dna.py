@@ -11,10 +11,7 @@ class Dna:
     def __init__(self, weights=None, biases=None):
         self.fitness = 0
         
-        nn_architecture = [
-            {"input_dim": INPUT_SIZE, "output_dim": NEURONS_HIDDEN_LAYERS, "activation": "relu"},
-            {"input_dim": NEURONS_HIDDEN_LAYERS, "output_dim": OUTPUT_SIZE, "activation": "sigmoid"},
-        ]
+        nn_architecture = NN_ARQ
         self.model = Network(nn_architecture, weights, biases)
 
     def iterate_to_update_fitness(self, iterations=1):

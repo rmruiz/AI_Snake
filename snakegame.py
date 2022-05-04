@@ -94,25 +94,25 @@ class SnakeGame:
         return -1.0
 
     def get_fruit_north_distance(self):
-        if self.apple_position[1] >= self.get_snake_head_pos()[1]:
+        if self.apple_position[1] > self.get_snake_head_pos()[1]:
             return -1.0
         else:
             return abs(self.get_snake_head_pos()[1]-self.apple_position[1])/(BOARD_SIZE-1)
 
     def get_fruit_south_distance(self):
-        if self.apple_position[1] <= self.get_snake_head_pos()[1]:
+        if self.apple_position[1] < self.get_snake_head_pos()[1]:
             return -1.0
         else:
             return abs(self.get_snake_head_pos()[1]-self.apple_position[1])/(BOARD_SIZE-1)
 
     def get_fruit_west_distance(self):
-        if self.apple_position[0] >= self.get_snake_head_pos()[0]:
+        if self.apple_position[0] > self.get_snake_head_pos()[0]:
             return -1.0
         else:
             return abs(self.get_snake_head_pos()[0]-self.apple_position[0])/(BOARD_SIZE-1)
 
     def get_fruit_east_distance(self):
-        if self.apple_position[0] <= self.get_snake_head_pos()[0]:
+        if self.apple_position[0] < self.get_snake_head_pos()[0]:
             return -1.0
         else:
             return abs(self.get_snake_head_pos()[0]-self.apple_position[0])/(BOARD_SIZE-1)
@@ -206,10 +206,10 @@ class SnakeGame:
                     [self.have_snake_on_west()],
                     [self.get_fruit_horizontal_distance()],
                     [self.get_fruit_vertical_distance()],
-                    #[self.get_fruit_north_distance()],
-                    #[self.get_fruit_south_distance()],
-                    #[self.get_fruit_west_distance()],
-                    #[self.get_fruit_east_distance()], 
+                    [self.get_fruit_north_distance()],
+                    [self.get_fruit_south_distance()],
+                    [self.get_fruit_west_distance()],
+                    [self.get_fruit_east_distance()], 
                     ]
 
 def north(pos):
