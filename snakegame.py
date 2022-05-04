@@ -93,29 +93,43 @@ class SnakeGame:
             return 1.0
         return -1.0
 
+    def get_fruit_north_distance(self):
+        if self.apple_position[1] >= self.get_snake_head_pos()[1]:
+            return -1.0
+        else:
+            return abs(self.get_snake_head_pos()[1]-self.apple_position[1])/(BOARD_SIZE-1)
+
+    def get_fruit_south_distance(self):
+        if self.apple_position[1] <= self.get_snake_head_pos()[1]:
+            return -1.0
+        else:
+            return abs(self.get_snake_head_pos()[1]-self.apple_position[1])/(BOARD_SIZE-1)
+
+    def get_fruit_west_distance(self):
+        if self.apple_position[0] >= self.get_snake_head_pos()[0]:
+            return -1.0
+        else:
+            return abs(self.get_snake_head_pos()[0]-self.apple_position[0])/(BOARD_SIZE-1)
+
+    def get_fruit_east_distance(self):
+        if self.apple_position[0] <= self.get_snake_head_pos()[0]:
+            return -1.0
+        else:
+            return abs(self.get_snake_head_pos()[0]-self.apple_position[0])/(BOARD_SIZE-1)
+
     def get_fruit_horizontal_distance(self):
-        #print(f"fruit:{self.apple_position}")
-        #print(self.apple_position[0])
-        #print(f"snake:{self.get_snake_head_pos()}")
-        #print(self.get_snake_head_pos()[0])
-        normalized_x_distance = (self.apple_position[0]-self.get_snake_head_pos()[0])/(BOARD_SIZE-1)
-        #print(f"distance={normalized_x_distance}")
-        return normalized_x_distance
+        return (self.apple_position[0]-self.get_snake_head_pos()[0])/(BOARD_SIZE-1)
 
     def get_fruit_vertical_distance(self):
         return (self.apple_position[1]-self.get_snake_head_pos()[1])/(BOARD_SIZE-1)
 
     def move_snake(self, turn, print_test=False):
-        #print(f"starting move in {direction=} [steps={self.steps_util_death}]")
-        #print(" the snake:")
-        #print(self.snake)
         if print_test:
-            
             print(f"have:{self.direction}")
             print(f"Got:{turn} {Output(turn)}")
         if turn == Output.LEFT.value:
             self.direction = Direction((self.direction.value - 1)%4)
-        if turn == Output.RIGHT.value:
+        elif turn == Output.RIGHT.value:
             self.direction = Direction((self.direction.value + 1)%4)
         if print_test:
             print(f"result:{self.direction}")
@@ -130,7 +144,6 @@ class SnakeGame:
         elif self.direction == Direction.WEST:
             next_head_position = west(self.get_snake_head_pos())
 
-        #next_head_position = [self.get_snake_head_pos()[0]+x,self.get_snake_head_pos()[1]+y]
         #check for apple
         got_apple = False
         if self.apple_position == next_head_position:
@@ -141,7 +154,6 @@ class SnakeGame:
                 print(" apple eaten!")
 
         #check for wall or body part
-        #if self.board[next_head_position[1]][next_head_position[0]] == BoardCell.WALL.value:
         elif is_wall(next_head_position):
             self.alive = False
             if print_test:
@@ -158,17 +170,12 @@ class SnakeGame:
 
         #move snake
         self.snake.append(next_head_position)
-        #print(" the snake (with new head):")
-        #print(self.snake)
-
+        
         if got_apple:
             self.new_fruit()
         else:
             self.snake.pop(0) #removes tail
         
-        #print(" the snake (at last):")
-        #print(self.snake)
-
         self.steps_util_death = self.steps_util_death - 1
         if self.steps_util_death == 0:
             if print_test:
@@ -198,7 +205,12 @@ class SnakeGame:
                     [self.have_snake_on_east()],
                     [self.have_snake_on_west()],
                     [self.get_fruit_horizontal_distance()],
-                    [self.get_fruit_vertical_distance()]  ]
+                    [self.get_fruit_vertical_distance()],
+                    #[self.get_fruit_north_distance()],
+                    #[self.get_fruit_south_distance()],
+                    #[self.get_fruit_west_distance()],
+                    #[self.get_fruit_east_distance()], 
+                    ]
 
 def north(pos):
     return [pos[0],pos[1]-1]

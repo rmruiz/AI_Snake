@@ -28,12 +28,13 @@ class Dna:
         sg = SnakeGame()
         while(sg.alive):
             input = sg.get_current_input()
+            print(input)
             next_move = self.next_move_from_input(input)
             sg.move_snake(next_move, print_test=print_test)
             if print_test:
                 print(f"fitness:{sg.get_fitness_score()}")  
                 sg.print_board()
-                sleep(0.1)  
+                sleep(0.05)  
         self.fitness = sg.get_fitness_score()
         if print_test:
             print("THE_END")
