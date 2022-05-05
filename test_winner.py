@@ -1,32 +1,42 @@
 from dna import Dna
-import json
-import jsonpickle
-from json import JSONEncoder
+from json import load
+from jsonpickle import decode
+from settings import *
+                  
+def run():
 
-FILENAME = "winner.json"
+    filename = input("Ingrese nombre de archivo:")
 
-def test2():
-    input = [[-1.0], [0.0], [0.5], [-1.0], [-1.0], [-1.0], [-1.0], [0.5], [-0.25]]
-    for _ in range(50):
-        member = Dna()
-        print(member.next_move_from_input(input))        
-           
-def test1():
-    member = Dna(1)
+    with open(filename, 'r', encoding='utf-8') as f:
+        json_data = load(f)
+    
+    data = decode(json_data)
+    member = Dna(data['NeuralNetwork']['weights'],data['NeuralNetwork']['biases'])
 
-    with open(FILENAME, 'r', encoding='utf-8') as f:
-        json_data = json.load(f)
+    global BOARD_SIZE
+    BOARD_SIZE = data['config']['BOARD_SIZE']
+    print("SETTINGS:")
+    print(F"RUN_NAME:{data['config']['RUN_NAME']}")
+    print(F"POPULATION_SIZE:{data['config']['POPULATION_SIZE']}")
+    print(F"RANDOM_MEMBERS_TO_ADD:{data['config']['RANDOM_MEMBERS_TO_ADD']}")
+    print(F"ITERATIONS_PER_GENERATION:{data['config']['ITERATIONS_PER_GENERATION']}")
+    print(F"MUTATION_RATE:{data['config']['MUTATION_RATE']}")
+    print(F"TOP_PARENTS_SELECTED:{data['config']['TOP_PARENTS_SELECTED']}")
+    print(F"ADD_PARENTS:{data['config']['ADD_PARENTS']}")
+    print(F"CROSSOVERS_TO_ADD:{data['config']['CROSSOVERS_TO_ADD']}")
+    print(F"BOARD_SIZE:{data['config']['BOARD_SIZE']}")
+    print(F"MAX_STEPS_WITHOUT_FOOD:{data['config']['MAX_STEPS_WITHOUT_FOOD']}")
+    print(F"RUN_NAME:{data['config']['RUN_NAME']}")
+    print(F"NN_ARQ:{data['config']['NN_ARQ']}")
 
-    data = jsonpickle.decode(json_data)
-
-    member.model.nn_architecture = data['nn_architecture']
-    member.model.biases = data['biases']
-    member.model.weights = data['weights']
-    #member.model.num_layers = len(member.model.sizes)
-
+    start = input("Start?")
+    if start == "N" or start == "n":
+        exit()
+    
     member.test_dna_to_update_fitness(print_test=True)
     
+    
 if __name__ == '__main__':
-    test1()
+    run()
 
         
