@@ -4,7 +4,7 @@ import time
 from os import mkdir
 
 from population import Population
-from dna import Dna
+from member import Member
 from settings import *
 
 def main():
@@ -15,67 +15,56 @@ def main():
 
     population = Population(size=POPULATION_SIZE)  
     for gen in range(GENERATIONS):
-        print("")
-        print(f"Starting Generation #{gen}")
-        print(f"Population size: {len(population.members)}")
         
-        print(f"Updating fitness for Generation #{gen}")
+        logging.info(f"Starting Generation #{gen}")
+        logging.info(f"Population size: {len(population.members)}")
+        
+        logging.debug(f"Updating fitness for Generation #{gen}")
         start = time.time()
         population.update_fitness(iterations=ITERATIONS_PER_GENERATION)
         end = time.time()
-        logging.debug(f"Time elapsed:{end - start}")
-        print(f"Updating fitness for Generation #{gen} - completed in {end - start}")
-        
-        if 'run' not in stats:
-            stats['run'] = {}
+        fitness_time = end - start
+        logging.info(f"Updating fitness for Generation #{gen} - completed in {fitness_time}")
+
         stats['run']['gen'] = gen
         population.save_best_to_file(data=stats)
 
         results = [member.fitness for member in population.members]
         top_results = sorted(results)[-10:]
-        print(f"Results for Generation #{gen}:{top_results}")
+        logging.info(f"Top 10 results for Generation #{gen}:{top_results}")
+        stats['results'][gen] = {}
+        stats['results'][gen]['min'] = min(results)
+        stats['results'][gen]['max'] = max(results)
+        stats['results'][gen]['avg'] = sum(results)/len(results)
+        stats['results'][gen]['avg_top_10'] = sum(top_results)/len(top_results)
+        stats['results'][gen]['fitness_time'] = fitness_time
+
+        logging.info(f"Stats for gen:{gen}, max:{stats['results'][gen]['max']}, avg:{stats['results'][gen]['avg']:2f}, avg top 10:{stats['results'][gen]['avg_top_10']:2f}, fitness time:{fitness_time}")
         
         new_population = Population(0)
         
         #TODO: change Dna name class to Member
-        parents_dna: list[Dna]
-        parents_dna = population.get_best_members(TOP_PARENTS_SELECTED) #list of dna's
+        parents_dna: list[Member]
+        parents_dna = population.best_members(TOP_PARENTS_SELECTED) #list of dna's
     
         if ADD_PARENTS:
-            print(f"Adding parents for Generation #{gen}")
-            new_population.add_members_from_dna(parents_dna)
+            new_population.add_members(parents_dna)
             #TODO: is this the same? remove add_members_from_dna method
             #population.members = parents_dna
-            print(f"Adding parents for Generation #{gen} - completed")
+            logging.debug(f"Adding parents for Generation #{gen} - completed")
         
-        #add CROSSOVERS_TO_ADD crossing 1 weight or 1 biases
-        """
-        crossover_type=all (swap all randomly)
-        crossover_type=perc (swal perc% randomly) (fixed in 50%)
-        crossover_type=single (swap one value randomly)
-
-        crossover_w_or_b=weights
-        crossover_w_or_b=biases
-        crossover_w_or_b=both
-        crossover_w_or_b=random
-        """
-        print(f"Adding crossovers for Generation #{gen}")
-        new_population.add_crossover_members_from_dna(parents_dna, CROSSOVERS_TO_ADD, MUTATION_RATE, "single", "random")
-        print(f"Adding crossovers for Generation #{gen} - completed")
-        #   for each crossovers add both or only ADD_CROSSOVER_WINNER
-        # fill with RANDOM_MEMBERS_TO_ADD
+        if CROSSOVERS_TO_ADD > 0:
+            logging.debug(f"Adding crossovers for Generation #{gen}")
+            start = time.time()
+            new_population.crossover_members(parents_dna, CROSSOVERS_TO_ADD, MUTATION_RATE, "single", "random")
+            end = time.time()
+            logging.info(f"Adding crossovers for Generation #{gen} - completed in {end - start}")
+        
         if RANDOM_MEMBERS_TO_ADD > 0:
-            print(f"Filling some random members for Generation #{gen}")
-            population.fill_with_random_members(RANDOM_MEMBERS_TO_ADD)
-            print(f"Filling some random members for Generation #{gen} - completed")
+            population.add_random_members(RANDOM_MEMBERS_TO_ADD)
+            logging.info(f"Filling some random members for Generation #{gen} - completed")
 
-        population=new_population
-        
-        
-    #logging.info(stats)
-    #for gen in stats['results']: 
-    #    logging.info(f"{gen} {stats['results'][gen]['min']} {stats['results'][gen]['max']} {stats['results'][gen]['avg']} {stats['results'][gen]['stdev']}")
-
+        population=new_population    
     
 def config_new_logger():
     global RUN_NAME
@@ -106,6 +95,7 @@ def set_stats_globals():
 
     stats = {}
     stats['results'] = {}
+    stats['run'] = {}
     stats['config'] = {
         'POPULATION_SIZE': POPULATION_SIZE, 
         'GENERATIONS': GENERATIONS, 

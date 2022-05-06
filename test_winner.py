@@ -1,4 +1,4 @@
-from dna import Dna
+from member import Member
 from json import load
 from jsonpickle import decode
 from settings import *
@@ -11,7 +11,7 @@ def run():
         json_data = load(f)
     
     data = decode(json_data)
-    member = Dna(data['NeuralNetwork']['weights'],data['NeuralNetwork']['biases'])
+    member = Member(data['NeuralNetwork']['weights'],data['NeuralNetwork']['biases'])
 
     global BOARD_SIZE
     BOARD_SIZE = data['config']['BOARD_SIZE']
@@ -33,7 +33,7 @@ def run():
     if start == "N" or start == "n":
         exit()
     
-    member.test_dna_to_update_fitness(print_test=True)
+    member.play_game_to_update_fitness(print_test=True)
     
     
 if __name__ == '__main__':

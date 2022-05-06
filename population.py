@@ -6,46 +6,37 @@ from copy import deepcopy
 from random import randint, random
 from joblib import Parallel, delayed
 
-from dna import Dna
+from member import Member
 from snakegame import SnakeGame
 from settings import *
 
 class Population:
     def __init__(self, size):
-        self.members = [Dna() for _ in range(size)]
+        self.members = [Member() for _ in range(size)]
 
-    def add_crossover_members_from_dna(self, parents_dna: list[Dna], quantity, mutation_rate:int, crossover_type, crossover_w_or_b):
+    def crossover_members(self, members: list[Member], quantity, mutation_rate:int, crossover_type, crossover_w_or_b):
         mutate: bool = mutation_rate > randint(1,100)
-        new_dnas = []
+        new_members = []
         for _ in range(quantity):
-            father_dna = select_proportional_by_fitness(parents_dna)
-            mother_dna = select_proportional_by_fitness(parents_dna)
-            new_dna = mix_dna(father_dna, mother_dna, mix_type=crossover_type, mix_weights_or_biases=crossover_w_or_b, mutate=mutate)
-            new_dnas.append(new_dna)
-        self.add_members_from_dna(new_dnas)
+            father = select_proportional_by_fitness(members)
+            mother = select_proportional_by_fitness(members)
+            new_member = mix_dna(father, mother, mix_type=crossover_type, mix_weights_or_biases=crossover_w_or_b, mutate=mutate)
+            new_members.append(new_member)
+        self.add_members(new_members)
 
-    def add_members_from_dna(self, list_of_dna: list[Dna]) -> None:
-        #TODO: reference ? needs deepcopy?
-        for dna in list_of_dna:
-            new_member = Dna()
-            new_member.model = dna.model
-            self.members.append(new_member)
+    def add_members(self, members: list[Member]) -> None:
+        for member in members:
+            weights = deepcopy(member.model.weights)
+            biases = deepcopy(member.model.biases)
+            self.members.append(Member(weights=weights, biases=biases))
 
-    def add_member_from_dna(self, weights, biases):
-        #TODO: reference ? needs deepcopy?
-        member = Dna()
-        member.model.weights = weights
-        member.model.biases = biases
-        self.members.append(member)
+    def add_random_members(self, quantity):
+        self.members = self.members + [Member() for _ in range(quantity)]
 
-    def fill_with_random_members(self, quantity):
-        self.members = self.members + [Dna() for _ in range(quantity)]
-
-    def get_best_members(self, quantity:int) -> list[Dna]:
+    def best_members(self, quantity:int) -> list[Member]:
         return sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
 
     def save_best_to_file(self, data):
-        
         best_idx = -1
         best_fitness = 0
         for idx, member in enumerate(self.members):
@@ -54,7 +45,6 @@ class Population:
                 best_idx = idx
 
         best_fitness = self.members[best_idx].fitness
-        print(f"Best so far: fitness[{best_fitness}]")
 
         dir_name = data['config']['RUN_NAME']
         filename = dir_name + "/" + strftime(f"{best_fitness}-%Y%m%d.json")
@@ -71,22 +61,19 @@ class Population:
 
     def update_fitness(self, iterations=1):
         num_cores = -1 # use all of them
-        start = time()
-        results = Parallel(n_jobs=num_cores) ( delayed( iterate_to_update_fitness ) ( member, iterations ) for member in self.members )
-
+        results = Parallel(n_jobs=num_cores) ( delayed( iterate_to_update_fitness ) (member, iterations ) for member in self.members )
         for i, member in enumerate(self.members):
             member.fitness = results[i]
-        end = time()
-        debug(f"Time elapsed:{end - start}")
-
+        
+        
 def iterate_to_update_fitness(member, iterations=1) -> int:
     results = []
-    for i in range(iterations):
+    for _ in range(iterations):
         result = test_dna_to_update_fitness(member)
         results.append(result)
     return int(sum(results)/len(results))
 
-def test_dna_to_update_fitness(member:Dna) -> int:
+def test_dna_to_update_fitness(member:Member) -> int:
     sg = SnakeGame()
     while(sg.alive):
         input = sg.get_current_input()
@@ -94,7 +81,8 @@ def test_dna_to_update_fitness(member:Dna) -> int:
         sg.move_snake(next_move)
     return sg.get_fitness_score()
 
-def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:str="random", mutate:bool=False):
+
+def mix_dna(dnaA: Member,dnaB: Member, mix_type:str="single", mix_weights_or_biases:str="random", mutate:bool=False):
     """
     mix_type=all (swap all randomly)
     mix_type=perc (swal perc% randomly)
@@ -110,7 +98,7 @@ def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:st
     j=0
     k=0
     
-    new_dna:Dna = Dna(weights=deepcopy(dnaA.model.weights), biases=deepcopy(dnaA.model.biases))
+    new_dna:Member = Member(weights=deepcopy(dnaA.model.weights), biases=deepcopy(dnaA.model.biases))
 
     change_weights:bool = (mix_weights_or_biases == "random" and randint(0,1) == 0) or mix_weights_or_biases == "weights" or mix_weights_or_biases == "both"
     change_biases:bool = (mix_weights_or_biases == "random" and randint(0,1) == 1) or mix_weights_or_biases == "biases" or mix_weights_or_biases == "both"
@@ -170,14 +158,15 @@ def mix_dna(dnaA: Dna,dnaB: Dna, mix_type:str="single", mix_weights_or_biases:st
 
     return new_dna
 
-def select_proportional_by_fitness(parents_dna: list[Dna]):
+def select_proportional_by_fitness(members: list[Member]):
     total_fitness = 0
-    for dna in parents_dna:
-        total_fitness = total_fitness + dna.fitness
+    for member in members:
+        print(f"member fitness:{member.fitness}")
+        total_fitness = total_fitness + member.fitness
 
     random_fitness_wheel = randint(1,total_fitness-1)
-    for selected_dna in parents_dna:
-        random_fitness_wheel = random_fitness_wheel - selected_dna.fitness
+    for selected_member in members:
+        random_fitness_wheel = random_fitness_wheel - selected_member.fitness
         if random_fitness_wheel <= 0:
-            return selected_dna
+            return selected_member
 
