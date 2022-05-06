@@ -61,26 +61,12 @@ class Population:
 
     def update_fitness(self, iterations=1):
         num_cores = -1 # use all of them
-        results = Parallel(n_jobs=num_cores) ( delayed( iterate_to_update_fitness ) (member, iterations ) for member in self.members )
+        results = Parallel(n_jobs=num_cores) ( delayed( p_iterate_to_update_fitness ) (member, iterations ) for member in self.members )
         for i, member in enumerate(self.members):
             member.fitness = results[i]
-        
-        
-def iterate_to_update_fitness(member, iterations=1) -> int:
-    results = []
-    for _ in range(iterations):
-        result = test_dna_to_update_fitness(member)
-        results.append(result)
-    return int(sum(results)/len(results))
-
-def test_dna_to_update_fitness(member:Member) -> int:
-    sg = SnakeGame()
-    while(sg.alive):
-        input = sg.get_current_input()
-        next_move = member.next_move_from_input(input)
-        sg.move_snake(next_move)
-    return sg.get_fitness_score()
-
+             
+def p_iterate_to_update_fitness(member, iterations=1) -> int:
+    return member.iterate_to_update_fitness(iterations)
 
 def mix_dna(dnaA: Member,dnaB: Member, mix_type:str="single", mix_weights_or_biases:str="random", mutate:bool=False):
     """
@@ -161,7 +147,6 @@ def mix_dna(dnaA: Member,dnaB: Member, mix_type:str="single", mix_weights_or_bia
 def select_proportional_by_fitness(members: list[Member]):
     total_fitness = 0
     for member in members:
-        print(f"member fitness:{member.fitness}")
         total_fitness = total_fitness + member.fitness
 
     random_fitness_wheel = randint(1,total_fitness-1)

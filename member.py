@@ -18,23 +18,7 @@ class Member:
             result = self.play_game_to_update_fitness()
             results.append(result)
         self.fitness = int(sum(results)/len(results))
-
-        """
-        def iterate_to_update_fitness(member, iterations=1) -> int:
-    results = []
-    for _ in range(iterations):
-        result = test_dna_to_update_fitness(member)
-        results.append(result)
-    return int(sum(results)/len(results))
-
-def test_dna_to_update_fitness(member:Member) -> int:
-    sg = SnakeGame()
-    while(sg.alive):
-        input = sg.get_current_input()
-        next_move = member.next_move_from_input(input)
-        sg.move_snake(next_move)
-    return sg.get_fitness_score()
-    """
+        return self.fitness
 
     def play_game_to_update_fitness(self, print_test=False):
         sg = SnakeGame()
@@ -53,8 +37,6 @@ def test_dna_to_update_fitness(member:Member) -> int:
             print(f"snake:{sg.snake}")
             print(f"fitnes:{self.fitness}")
         return self.fitness
-
-
 
     def next_move_from_input(self, input):
         return np.argmax(self.model.feedforward(input))

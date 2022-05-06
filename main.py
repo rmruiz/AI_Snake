@@ -56,7 +56,7 @@ def main():
         if CROSSOVERS_TO_ADD > 0:
             logging.debug(f"Adding crossovers for Generation #{gen}")
             start = time.time()
-            new_population.crossover_members(parents_dna, CROSSOVERS_TO_ADD, MUTATION_RATE, "single", "random")
+            new_population.crossover_members(parents_dna, CROSSOVERS_TO_ADD, MUTATION_RATE, "perc", "random")
             end = time.time()
             logging.info(f"Adding crossovers for Generation #{gen} - completed in {end - start}")
         
