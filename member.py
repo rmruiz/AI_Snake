@@ -11,29 +11,33 @@ class Member:
     def __init__(self, weights=None, biases=None):
         self.fitness = 0    
         self.nn_architecture = NN_ARQ
-   
         if weights is None:
-            self.weights = []
-            for layer in self.nn_architecture:
-                layer_input_size = layer["input_dim"]
-                layer_output_size = layer["output_dim"]
-                self.weights.append(np.random.randn(layer_output_size,layer_input_size))
-                #TODO:test uniform distrib
-                #self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
-                #    size=(layer_output_size,layer_input_size)))
+            self.random_weights()
         else:
             self.weights = weights
-                
         if biases is None:
-            self.biases = []
-            for layer in self.nn_architecture:
-                layer_output_size = layer["output_dim"]
-                self.biases.append(np.random.randn(layer_output_size,1))
-                #TODO:test uniform distrib
-                #self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
-                #    size=(layer_output_size,1)))
+            self.random_biases()
         else:
             self.biases = biases
+
+    def random_weights(self):
+        self.weights = []
+        for layer in self.nn_architecture:
+            layer_input_size = layer["input_dim"]
+            layer_output_size = layer["output_dim"]
+            #self.weights.append(np.random.randn(layer_output_size,layer_input_size))
+            #TODO:test uniform distrib
+            self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
+                size=(layer_output_size,layer_input_size)))
+
+    def random_biases(self):
+        self.biases = []
+        for layer in self.nn_architecture:
+            layer_output_size = layer["output_dim"]
+            #self.biases.append(np.random.randn(layer_output_size,1))
+            #TODO:test uniform distrib
+            self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
+                size=(layer_output_size,1)))
             
     def feedforward(self, A):
         for idx, layer in enumerate(self.nn_architecture):
