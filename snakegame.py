@@ -4,6 +4,7 @@ from settings import *
 
 class SnakeGame:
     def __init__(self):
+        __slots__ = "snake", "apple_position", "alive", "apples_eaten", "steps_util_death", "total_steps", "direction"
         #self.snake = [[int(BOARD_SIZE/2)+1, int(BOARD_SIZE/2)+1]] #starting point (x,y) (horizontal, vertical)
         self.snake = [ [9, 12], [9, 11], [9, 10], [10, 10] ]
         self.apple_position = None

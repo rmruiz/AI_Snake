@@ -11,6 +11,7 @@ from snakegame import SnakeGame
 from settings import *
 
 class Population:
+    __slots__ = "members"
     def __init__(self, size):
         self.members = [Member() for _ in range(size)]
 

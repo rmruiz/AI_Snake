@@ -6,6 +6,7 @@ from nn import Network
 from settings import *
 
 class Member:
+    __slots__ = "fitness", "model"
     def __init__(self, weights=None, biases=None):
         self.fitness = 0
         
