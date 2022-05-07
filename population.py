@@ -7,7 +7,6 @@ from random import randint, random
 from joblib import Parallel, delayed
 
 from member import Member
-from snakegame import SnakeGame
 from settings import *
 
 class Population:
@@ -27,8 +26,8 @@ class Population:
 
     def add_members(self, members: list[Member]) -> None:
         for member in members:
-            weights = deepcopy(member.model.weights)
-            biases = deepcopy(member.model.biases)
+            weights = deepcopy(member.weights)
+            biases = deepcopy(member.biases)
             self.members.append(Member(weights=weights, biases=biases))
 
     def add_random_members(self, quantity):
@@ -51,9 +50,9 @@ class Population:
         filename = dir_name + "/" + strftime(f"{best_fitness}-%Y%m%d.json")
 
         data['NeuralNetwork'] = {}
-        data['NeuralNetwork']['nn_architecture'] = self.members[best_idx].model.nn_architecture
-        data['NeuralNetwork']['biases'] = self.members[best_idx].model.biases
-        data['NeuralNetwork']['weights'] = self.members[best_idx].model.weights
+        data['NeuralNetwork']['nn_architecture'] = self.members[best_idx].nn_architecture
+        data['NeuralNetwork']['biases'] = self.members[best_idx].biases
+        data['NeuralNetwork']['weights'] = self.members[best_idx].weights
 
         json_data = encode(data)
 
@@ -85,61 +84,61 @@ def mix_dna(dnaA: Member,dnaB: Member, mix_type:str="single", mix_weights_or_bia
     j=0
     k=0
     
-    new_dna:Member = Member(weights=deepcopy(dnaA.model.weights), biases=deepcopy(dnaA.model.biases))
+    new_dna:Member = Member(weights=deepcopy(dnaA.weights), biases=deepcopy(dnaA.biases))
 
     change_weights:bool = (mix_weights_or_biases == "random" and randint(0,1) == 0) or mix_weights_or_biases == "weights" or mix_weights_or_biases == "both"
     change_biases:bool = (mix_weights_or_biases == "random" and randint(0,1) == 1) or mix_weights_or_biases == "biases" or mix_weights_or_biases == "both"
 
     if mix_type == "all" or mix_type == "perc":
         if change_weights:
-            for i, w in enumerate(dnaA.model.weights):
+            for i, w in enumerate(dnaA.weights):
                 for j, row in enumerate(w):
                     for k in range(len(row)):
                         if mix_type == all or percentage_to_mix > randint(1,100):
-                            new_dna.model.weights[i][j][k] = dnaB.model.weights[i][j][k]
+                            new_dna.weights[i][j][k] = dnaB.weights[i][j][k]
         if change_biases:
-            for i, b in enumerate(dnaA.model.biases):
+            for i, b in enumerate(dnaA.biases):
                 for j, row in enumerate(b):
                     for k in range(len(row)):
                         if mix_type == all or percentage_to_mix > randint(1,100):
-                            new_dna.model.biases[i][j][k] = dnaB.model.biases[i][j][k]
+                            new_dna.biases[i][j][k] = dnaB.biases[i][j][k]
     else: #mix_type == "single"
         if change_weights:
-            i = randint(0,len(new_dna.model.weights)-1)
-            j = randint(0,len(new_dna.model.weights[i])-1)
-            k = randint(0,len(new_dna.model.weights[i][j])-1)
-            new_dna.model.weights[i][j][k] = dnaB.model.weights[i][j][k]
-            #print(dnaA.model.weights[i][j][k])
-            #print(dnaB.model.weights[i][j][k])
-            #print(new_dna.model.weights[i][j][k])
+            i = randint(0,len(new_dna.weights)-1)
+            j = randint(0,len(new_dna.weights[i])-1)
+            k = randint(0,len(new_dna.weights[i][j])-1)
+            new_dna.weights[i][j][k] = dnaB.weights[i][j][k]
+            #print(dnaA.weights[i][j][k])
+            #print(dnaB.weights[i][j][k])
+            #print(new_dna.weights[i][j][k])
         if change_biases:
-            i = randint(0,len(new_dna.model.biases)-1)
-            j = randint(0,len(new_dna.model.biases[i])-1)
-            k = randint(0,len(new_dna.model.biases[i][j])-1)
-            new_dna.model.biases[i][j][k] = dnaB.model.biases[i][j][k]
-            #print(dnaA.model.biases[i][j][k])
-            #print(dnaB.model.biases[i][j][k])
-            #print(new_dna.model.biases[i][j][k])
+            i = randint(0,len(new_dna.biases)-1)
+            j = randint(0,len(new_dna.biases[i])-1)
+            k = randint(0,len(new_dna.biases[i][j])-1)
+            new_dna.biases[i][j][k] = dnaB.biases[i][j][k]
+            #print(dnaA.biases[i][j][k])
+            #print(dnaB.biases[i][j][k])
+            #print(new_dna.biases[i][j][k])
 
     #print(f"switch in:[{i},{j},{k}]")
         
     if mutate:
         if change_weights:
-            i = randint(0,len(new_dna.model.weights)-1)
-            j = randint(0,len(new_dna.model.weights[i])-1)
-            k = randint(0,len(new_dna.model.weights[i][j])-1)
-            new_dna.model.weights[i][j][k] = (random()-0.5)*2
-            #print(dnaA.model.weights[i][j][k])
-            #print(dnaB.model.weights[i][j][k])
-            #print(new_dna.model.weights[i][j][k])
+            i = randint(0,len(new_dna.weights)-1)
+            j = randint(0,len(new_dna.weights[i])-1)
+            k = randint(0,len(new_dna.weights[i][j])-1)
+            new_dna.weights[i][j][k] = (random()-0.5)*2
+            #print(dnaA.weights[i][j][k])
+            #print(dnaB.weights[i][j][k])
+            #print(new_dna.weights[i][j][k])
         if change_biases:
-            i = randint(0,len(new_dna.model.biases)-1)
-            j = randint(0,len(new_dna.model.biases[i])-1)
-            k = randint(0,len(new_dna.model.biases[i][j])-1)
-            new_dna.model.biases[i][j][k] = (random()-0.5)*2
-            #print(dnaA.model.biases[i][j][k])
-            #print(dnaB.model.biases[i][j][k])
-            #print(new_dna.model.biases[i][j][k])
+            i = randint(0,len(new_dna.biases)-1)
+            j = randint(0,len(new_dna.biases[i])-1)
+            k = randint(0,len(new_dna.biases[i][j])-1)
+            new_dna.biases[i][j][k] = (random()-0.5)*2
+            #print(dnaA.biases[i][j][k])
+            #print(dnaB.biases[i][j][k])
+            #print(new_dna.biases[i][j][k])
     
         #print(f"mutate:{mutate} [{i},{j},{k}]")        
 

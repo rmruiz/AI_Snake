@@ -1,17 +1,47 @@
 import numpy as np
 from time import sleep
+import numpy as np
 
 from snakegame import SnakeGame
-from nn import Network
+#from nn import Network
 from settings import *
 
 class Member:
-    __slots__ = "fitness", "model"
+    __slots__ = "fitness", "nn_architecture", "weights", "biases"
     def __init__(self, weights=None, biases=None):
-        self.fitness = 0
-        
-        nn_architecture = NN_ARQ
-        self.model = Network(nn_architecture, weights, biases)
+        self.fitness = 0    
+        self.nn_architecture = NN_ARQ
+   
+        if weights is None:
+            self.weights = []
+            for layer in self.nn_architecture:
+                layer_input_size = layer["input_dim"]
+                layer_output_size = layer["output_dim"]
+                self.weights.append(np.random.randn(layer_output_size,layer_input_size))
+                #TODO:test uniform distrib
+                #self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
+                #    size=(layer_output_size,layer_input_size)))
+        else:
+            self.weights = weights
+                
+        if biases is None:
+            self.biases = []
+            for layer in self.nn_architecture:
+                layer_output_size = layer["output_dim"]
+                self.biases.append(np.random.randn(layer_output_size,1))
+                #TODO:test uniform distrib
+                #self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
+                #    size=(layer_output_size,1)))
+        else:
+            self.biases = biases
+            
+    def feedforward(self, A):
+        for idx, layer in enumerate(self.nn_architecture):
+            activ_function = layer["activation"]
+            W = self.weights[idx]
+            b = self.biases[idx]
+            A = single_layer_forward_propagation(A, W, b, activ_function)
+        return A
 
     def iterate_to_update_fitness(self, iterations=1):
         results = []
@@ -40,5 +70,21 @@ class Member:
         return self.fitness
 
     def next_move_from_input(self, input):
-        return np.argmax(self.model.feedforward(input))
+        return np.argmax(self.feedforward(input))
 
+def single_layer_forward_propagation(A, W, b, activation="relu"):
+    if activation == "relu":
+        activation_func = relu
+    elif activation == "sigmoid":
+        activation_func = sigmoid
+    else:
+        raise Exception('Non-supported activation function')
+        
+    return activation_func(np.dot(W, A) + b)
+
+def relu(z):
+    return np.maximum(0,z)
+
+def sigmoid(z):
+    """The sigmoid function."""
+    return 1.0/(1.0+np.exp(-z))
