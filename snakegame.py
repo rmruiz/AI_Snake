@@ -7,7 +7,6 @@ class SnakeGame:
         __slots__ = "snake", "apple_position", "alive", "apples_eaten", "steps_util_death", "total_steps", "direction"
         #self.snake = [[int(BOARD_SIZE/2)+1, int(BOARD_SIZE/2)+1]] #starting point (x,y) (horizontal, vertical)
         self.snake = [ [9, 12], [9, 11], [9, 10], [10, 10] ]
-        self.apple_position = None
         self.new_fruit()
         self.alive = True
         self.apples_eaten = 0
@@ -135,7 +134,7 @@ class SnakeGame:
         if print_test:
             print(f"result:{self.direction}")
 
-        next_head_position = []
+        #next_head_position = []
         if self.direction == Direction.NORTH:
             next_head_position = north(self.get_snake_head_pos())
         elif self.direction == Direction.SOUTH:
@@ -164,9 +163,7 @@ class SnakeGame:
         elif next_head_position in self.snake:
             self.alive = False
             if print_test:
-                print(" me is dead :( - hit myself")
-                #print(next_head_position)
-                #print(self.snake)                
+                print(" me is dead :( - hit myself")                
             return
 
         #move snake
@@ -188,7 +185,7 @@ class SnakeGame:
             print(f"total steps: {self.total_steps}, total apples: {self.apples_eaten}")
         return
     
-    def get_fitness_score(self):
+    def get_score(self):
         #return self.total_steps*self.apples_eaten**2 # + self.apples_eaten * MAX_STEPS_WITHOUT_FOOD
         #return int(10000/(self.total_steps+1)*self.apples_eaten**2)
         return self.total_steps*((self.apples_eaten+1)**2)

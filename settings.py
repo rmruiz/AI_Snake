@@ -2,7 +2,7 @@ from enum import Enum
 
 ## Genetic Algorithm Config
 POPULATION_SIZE = 2000
-GENERATIONS = 300
+GENERATIONS = 100
 ITERATIONS_PER_GENERATION = 10
 RANDOM_MEMBERS_TO_ADD = 5
 MUTATION_RATE = 80
@@ -41,3 +41,29 @@ class Direction(Enum):
     EAST = 1
     SOUTH = 2
     WEST = 3
+
+"""
+Run results:
+np.random.randn is much better than np.random.uniform (in Member as initia nn weights and biases)
+--> 150K-300K vs 500K-1M
+
+Pending results:
+Generate fixed initial Popultaion
+Remove random members
+Remove parents?
+then:
+Test Mutation Rate
+Test Iterations per generation
+Test Top parents selected
+
+
+x86, no jit
+40.59 max:474848 avg top 10:410711
+31.40 max:253140 avg top 10:211222
+
+x86, with jit
+28.67 max:507201 avg top 10:341259
+26.99 max:365869 avg top 10:215231
+
+
+"""

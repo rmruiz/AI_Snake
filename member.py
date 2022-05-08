@@ -1,9 +1,8 @@
 import numpy as np
 from time import sleep
-import numpy as np
+#from numba import jit #only for x86
 
 from snakegame import SnakeGame
-#from nn import Network
 from settings import *
 
 class Member:
@@ -25,19 +24,19 @@ class Member:
         for layer in self.nn_architecture:
             layer_input_size = layer["input_dim"]
             layer_output_size = layer["output_dim"]
-            #self.weights.append(np.random.randn(layer_output_size,layer_input_size))
+            self.weights.append(np.random.randn(layer_output_size,layer_input_size))
             #TODO:test uniform distrib
-            self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
-                size=(layer_output_size,layer_input_size)))
+            #self.weights.append(np.random.uniform(low=-1.0, high=1.0, 
+            #    size=(layer_output_size,layer_input_size)))
 
     def random_biases(self):
         self.biases = []
         for layer in self.nn_architecture:
             layer_output_size = layer["output_dim"]
-            #self.biases.append(np.random.randn(layer_output_size,1))
+            self.biases.append(np.random.randn(layer_output_size,1))
             #TODO:test uniform distrib
-            self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
-                size=(layer_output_size,1)))
+            #self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
+            #    size=(layer_output_size,1)))
             
     def feedforward(self, A):
         for idx, layer in enumerate(self.nn_architecture):
@@ -62,10 +61,10 @@ class Member:
             next_move = self.next_move_from_input(input)
             sg.move_snake(next_move, print_test=print_test)
             if print_test:
-                print(f"fitness:{sg.get_fitness_score()}")  
+                print(f"fitness:{sg.get_score()}")  
                 sg.print_board()
                 sleep(0.05)  
-        self.fitness = sg.get_fitness_score()
+        self.fitness = sg.get_score()
         if print_test:
             print("THE_END")
             print(f"apple:{sg.apple_position}")
@@ -86,9 +85,11 @@ def single_layer_forward_propagation(A, W, b, activation="relu"):
         
     return activation_func(np.dot(W, A) + b)
 
+#@jit(nopython=True)
 def relu(z):
     return np.maximum(0,z)
 
+#@jit(nopython=True)
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
