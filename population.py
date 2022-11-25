@@ -46,7 +46,8 @@ class Population:
         best_fitness = self.members[best_idx].fitness
 
         dir_name = data['config']['RUN_NAME']
-        filename = dir_name + "/" + strftime(f"{best_fitness}-%Y%m%d.json")
+        gen_num = data['run']['gen']
+        filename = f'{dir_name}/{gen_num:04}-' + strftime(f"{best_fitness:012}-%Y.%m.%d_%H.%M.%S.json")
 
         data['NeuralNetwork'] = {}
         data['NeuralNetwork']['nn_architecture'] = self.members[best_idx].nn_architecture
