@@ -1,0 +1,8 @@
+dejar resultados en:
+https://docs.google.com/spreadsheets/d/1brSl2O2ZExR9DSF7YTxk7l1Q622mnjOkHVskenmBYLY/edit#gid=0
+
+
+1 . Tomar el menor valor del test como resultado de gusano?
+
+2 . Iterar hasta que no mejore.
+ - 15% mejora cada 10 iteraciones?
