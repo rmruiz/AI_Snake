@@ -51,7 +51,8 @@ class Member:
         for _ in range(iterations):
             result = self.play_game_to_update_fitness()
             results.append(result)
-        self.fitness = int(sum(results)/len(results))
+        #self.fitness = int(sum(results)/len(results))
+        self.fitness = min(results)
         return self.fitness
 
     def play_game_to_update_fitness(self, print_test=False):
