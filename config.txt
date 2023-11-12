@@ -1,1 +1,14 @@
-pyenv activate venv311
+brew install readline xz
+brew install pyenv pyenv-virtualenv
+
+pyenv install -l
+pyenv install 3.12.0
+
+pyenv virtualenv 3.12.0 venv312
+pyenv activate venv312
+
+export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+
+python3.12 -m pip install --upgrade pip
+
+pip install -r requirements.txt
