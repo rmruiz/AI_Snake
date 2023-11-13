@@ -33,6 +33,8 @@ def run():
     if start == "N" or start == "n":
         exit()
     
+    global PARALLEL_CPU
+    PARALLEL_CPU = 1
     member.play_game_to_update_fitness(print_test=True)
     
     
