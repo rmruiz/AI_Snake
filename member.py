@@ -1,12 +1,14 @@
 import numpy as np
 from time import sleep
 #from numba import jit #only for x86
+#from numba import njit
 
 from snakegame import SnakeGame
 from settings import *
 
 class Member:
     __slots__ = "fitness", "nn_architecture", "weights", "biases"
+    
     def __init__(self, weights=None, biases=None):
         self.fitness = 0    
         self.nn_architecture = NN_ARQ
@@ -37,7 +39,7 @@ class Member:
             #TODO:test uniform distrib
             #self.biases.append(np.random.uniform(low=-1.0, high=1.0, 
             #    size=(layer_output_size,1)))
-            
+
     def feedforward(self, A):
         for idx, layer in enumerate(self.nn_architecture):
             activ_function = layer["activation"]
@@ -51,8 +53,8 @@ class Member:
         for _ in range(iterations):
             result = self.play_game_to_update_fitness()
             results.append(result)
-        #self.fitness = int(sum(results)/len(results))
-        self.fitness = min(results)
+        self.fitness = int(sum(results)/len(results))
+        #self.fitness = max(results)
         return self.fitness
 
     def play_game_to_update_fitness(self, print_test=False):
@@ -86,11 +88,11 @@ def single_layer_forward_propagation(A, W, b, activation="relu"):
         
     return activation_func(np.dot(W, A) + b)
 
-#@jit(nopython=True)
+#@njit(nopython=True)
 def relu(z):
     return np.maximum(0,z)
 
-#@jit(nopython=True)
+#@njit(nopython=True)
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
