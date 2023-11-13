@@ -60,7 +60,7 @@ class Population:
             dump(json_data, f, ensure_ascii=False, indent=4)
 
     def update_fitness(self, iterations=1):
-        num_cores = -1 # use all of them
+        num_cores = PARALLEL_CPU
         results = Parallel(n_jobs=num_cores) ( delayed( p_iterate_to_update_fitness ) (member, iterations ) for member in self.members )
         for i, member in enumerate(self.members):
             member.fitness = results[i]
