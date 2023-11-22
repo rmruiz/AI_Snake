@@ -53,8 +53,8 @@ class Member:
         for _ in range(iterations):
             result = self.play_game_to_update_fitness()
             results.append(result)
+        
         self.fitness = int(sum(results)/len(results))
-        #self.fitness = max(results)
         return self.fitness
 
     def play_game_to_update_fitness(self, print_test=False):
@@ -67,13 +67,13 @@ class Member:
                 print(f"fitness:{sg.get_score()}")  
                 sg.print_board()
                 sleep(0.05)  
-        self.fitness = sg.get_score()
+        run_fitness = sg.get_score()
         if print_test:
             print("THE_END")
             print(f"apple:{sg.apple_position}")
             print(f"snake:{sg.snake}")
-            print(f"fitnes:{self.fitness}")
-        return self.fitness
+            print(f"fitnes:{run_fitness}")
+        return sg.get_score()
 
     def next_move_from_input(self, input):
         return np.argmax(self.feedforward(input))

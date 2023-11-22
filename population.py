@@ -8,10 +8,13 @@ from joblib import Parallel, delayed
 from member import Member
 from settings import *
 
+DEFAULT_ITERATIONS = 100
 class Population:
-    __slots__ = "members"
-    def __init__(self, size):
+    __slots__ = "members", "iterations"
+    def __init__(self, size=0, iterations=DEFAULT_ITERATIONS):
         self.members = [Member() for _ in range(size)]
+        #TODO: iterations should be inside Memmber
+        self.iterations = iterations
 
     def crossover_members(self, members: list[Member], quantity, mutation_rate:int, crossover_type, crossover_w_or_b):
         mutate: bool = mutation_rate > randint(1,100)
@@ -35,38 +38,73 @@ class Population:
     def best_members(self, quantity:int) -> list[Member]:
         return sorted(self.members, key = lambda x: x.fitness, reverse = True)[:quantity]
 
+    def print_stats(self, logging, gen):
+        all_results = []
+        all_results = self.get_results()
+        mm = max(all_results)
+        avg = sum(all_results)/len(all_results)
+        top_results = sorted(all_results)[-10:]
+        print(f"Top Results:{top_results}")
+        avg_top_10 = sum(top_results)/10.0
+        logging.info(f"Stats for gen:{gen}, max:{mm}, avg:{avg:2f}, avg top 10:{avg_top_10:2f}")
+        return
+
     def save_best_to_file(self, data):
-        best_idx = -1
-        best_fitness = 0
-        for idx, member in enumerate(self.members):
-            if member.fitness > best_fitness:
-                best_fitness = member.fitness
-                best_idx = idx
 
-        best_fitness = self.members[best_idx].fitness
+        #TODO: redo this
 
-        dir_name = data['config']['RUN_NAME']
-        gen_num = data['run']['gen']
-        filename = f'{dir_name}/{gen_num:04}-' + strftime(f"{best_fitness:012}-%Y.%m.%d_%H.%M.%S.json")
+        #results: list[Member]
+        #results = population.get_results()
+        #top_results = sorted(results)[-10:]
+        #logging.info(f"Top 10 results for Generation #{gen}:{top_results}")
+        #stats['results'][gen] = {}
+        #stats['results'][gen]['min'] = min(results)
+        #stats['results'][gen]['max'] = max(results)
+        #stats['results'][gen]['avg'] = sum(results)/len(results)
+        
+        #stats['results'][gen]['avg_top_10'] = sum(top_results)/len(top_results)
+        #stats['results'][gen]['fitness_time'] = fitness_time
 
-        data['NeuralNetwork'] = {}
-        data['NeuralNetwork']['nn_architecture'] = self.members[best_idx].nn_architecture
-        data['NeuralNetwork']['biases'] = self.members[best_idx].biases
-        data['NeuralNetwork']['weights'] = self.members[best_idx].weights
+        #best_idx = -1
+        #best_fitness = 0
+        #for idx, member in enumerate(self.members):
+        #    if member.fitness > best_fitness:
+        #        best_fitness = member.fitness
+        #        best_idx = idx
 
-        json_data = encode(data)
+        #best_fitness = self.members[best_idx].fitness
 
-        with open(filename, 'w', encoding='utf-8') as f:
-            dump(json_data, f, ensure_ascii=False, indent=4)
+        #dir_name = data['config']['RUN_NAME']
+        #gen_num = data['run']['gen']
+        #filename = f'{dir_name}/{gen_num:04}-' + strftime(f"{best_fitness:012}-%Y.%m.%d_%H.%M.%S.json")
 
-    def update_fitness(self, iterations=1):
+        #data['NeuralNetwork'] = {}
+        #data['NeuralNetwork']['nn_architecture'] = self.members[best_idx].nn_architecture
+        #data['NeuralNetwork']['biases'] = self.members[best_idx].biases
+        #data['NeuralNetwork']['weights'] = self.members[best_idx].weights
+
+        #json_data = encode(data)
+
+        #with open(filename, 'w', encoding='utf-8') as f:
+        #    dump(json_data, f, ensure_ascii=False, indent=4)
+        return
+
+    def update_fitness(self):
         num_cores = PARALLEL_CPU
-        results = Parallel(n_jobs=num_cores) ( delayed( p_iterate_to_update_fitness ) (member, iterations ) for member in self.members )
+        results = Parallel(n_jobs=num_cores) ( delayed( p_iterate_to_update_fitness ) (member, self.iterations ) for member in self.members )
+        #NOTETOSELF: Usando Parallel los objetos no son modificados, es necesario retornar el fitness
         for i, member in enumerate(self.members):
             member.fitness = results[i]
+        
+        #print(f"parallel iteration results:{results}")
+        #print(f"update_fitness results:{[member.fitness for member in self.members]}")
              
-def p_iterate_to_update_fitness(member, iterations=1) -> int:
-    return member.iterate_to_update_fitness(iterations)
+    def get_results(self):
+        return [member.fitness for member in self.members]
+
+# Parallel needs method with parametes (not class methods)
+def p_iterate_to_update_fitness(member, iterations=1):
+    return member.iterate_to_update_fitness(iterations=iterations)
 
 def cross_members(mem1: Member,mem2: Member, mix_type:str="single", mix_weights_or_biases:str="random", mutate:bool=False):
     """
@@ -125,11 +163,13 @@ def cross_members(mem1: Member,mem2: Member, mix_type:str="single", mix_weights_
     return new_mem
 
 def select_proportional_by_fitness(members: list[Member]):
+    #print("select_proportional_by_fitness")
     total_fitness = 0
     for member in members:
         total_fitness = total_fitness + member.fitness
+        #print(f"total_fitness={total_fitness}")
 
-    random_fitness_wheel = randint(1,total_fitness-1)
+    random_fitness_wheel = randint(0, total_fitness)
     for selected_member in members:
         random_fitness_wheel = random_fitness_wheel - selected_member.fitness
         if random_fitness_wheel <= 0:
